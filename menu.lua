@@ -1,6 +1,6 @@
 -- ══════════════════════════════════════════════════════
---           LULUCLC3 MENU v17.0 - INFINITY EDITION 👑
---                FLY+NOCLIP & JERK EMOTE FIX
+--           LULUCLC3 MENU v24.0 - OMNISCIENT 👑
+--        FLY + ESP TRACERS + TROLL + SERVER SCANNER
 -- ══════════════════════════════════════════════════════
 
 local Players = game:GetService("Players")
@@ -13,210 +13,167 @@ local Camera = workspace.CurrentCamera
 local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
 
 local Window = Rayfield:CreateWindow({
-   Name = "Luluclc3 Master V17 👑",
-   LoadingTitle = "Protocole Excellence en cours...",
-   LoadingSubtitle = "Version 17.0 - Infinite Style",
+   Name = "Luluclc3 Master V24 👑",
+   LoadingTitle = "Chargement de l'Arsenal Omniscient...",
+   LoadingSubtitle = "by Luluclc3 - L'Excellence Gentleman",
    Theme = "DarkBlue",
-   ConfigurationSaving = { Enabled = true, Folder = "Luluclc3_V17" }
+   ConfigurationSaving = { Enabled = true, Folder = "Luluclc3_V24" }
 })
 
 -- ══════════════════════════════════════
--- VARIABLES ET ÉTATS
+-- VARIABLES GLOBALES
 -- ══════════════════════════════════════
-local flyActive = false
-local noclipActive = false
-local flySpeed = 2
-local AimbotActive = false
-local TargetPlayer = "Tous"
-local AimDistance = 999999
-local espActive = false
-local hitboxSize = 2
+local flyActive, noclipActive, flySpeed = false, false, 3
+local AimbotActive, TargetPlayer = false, "Tous"
+local espTracers, espBoxes, espNames = false, false, false
+local spinning, spinSpeed = false, 50
+local jerkActive = false
 
 local function getRoot() return LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") end
 local function getHum() return LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") end
 
 -- ══════════════════════════════════════
--- ONGLET 1 : COMBAT (AIM SÉLECTIF)
+-- ONGLET 1 : 🔍 SERVER SENTINEL (FAILLES)
 -- ══════════════════════════════════════
-local CombatTab = Window:CreateTab("⚔️ Combat Elite", 4483362458)
+local ScanTab = Window:CreateTab("🔍 Server Failles", 4483362458)
 
-CombatTab:CreateSection("🎯 Aimbot Custom")
-CombatTab:CreateToggle({
-   Name = "Activer l'Aimbot",
-   CurrentValue = false,
-   Callback = function(v) AimbotActive = v end,
-})
+ScanTab:CreateSection("🛡️ Analyseur de Remotes")
+local ScanLabel = ScanTab:CreateLabel("Prêt pour l'analyse du serveur...")
 
-local PlayerList = {"Tous"}
-for _, p in pairs(Players:GetPlayers()) do if p ~= LocalPlayer then table.insert(PlayerList, p.Name) end end
-
-local TargetDropdown = CombatTab:CreateDropdown({
-   Name = "Cible Spécifique",
-   Options = PlayerList,
-   CurrentOption = {"Tous"},
-   Callback = function(v) TargetPlayer = v[1] end,
-})
-
-CombatTab:CreateButton({
-   Name = "Actualiser la Liste 🔄",
+ScanTab:CreateButton({
+   Name = "Scanner les Vulnérabilités 🚀",
    Callback = function()
-       local NewList = {"Tous"}
-       for _, p in pairs(Players:GetPlayers()) do if p ~= LocalPlayer then table.insert(NewList, p.Name) end end
-       TargetDropdown:Set(NewList)
-   end,
-})
-
-CombatTab:CreateSection("🛡️ Hitbox Modifier")
-CombatTab:CreateSlider({
-   Name = "Taille Hitbox",
-   Range = {2, 100}, Increment = 1, CurrentValue = 2,
-   Callback = function(v)
-       hitboxSize = v
-       task.spawn(function()
-           while hitboxSize > 2 do
-               task.wait(2)
-               for _, p in pairs(Players:GetPlayers()) do
-                   if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-                       p.Character.HumanoidRootPart.Size = Vector3.new(v, v, v)
-                       p.Character.HumanoidRootPart.Transparency = 0.7
-                       p.Character.HumanoidRootPart.CanCollide = false
-                   end
+       ScanLabel:Set("Analyse des failles en cours...")
+       task.wait(1)
+       local remotes = 0
+       local found = {}
+       for _, v in pairs(game:GetDescendants()) do
+           if v:IsA("RemoteEvent") or v:IsA("RemoteFunction") then
+               remotes = remotes + 1
+               local n = v.Name:lower()
+               if n:find("admin") or n:find("give") or n:find("money") or n:find("cash") or n:find("ban") or n:find("kill") then
+                   table.insert(found, v.Name)
                end
            end
-       end)
+       end
+       ScanLabel:Set(remotes .. " Remotes détectés.")
+       if #found > 0 then
+           Rayfield:Notify({Title = "FAILLE DÉTECTÉE", Content = "Remotes suspects : " .. table.concat(found, ", "), Duration = 6})
+       else
+           Rayfield:Notify({Title = "Analyse", Content = "Aucune faille critique nommée n'a été trouvée.", Duration = 3})
+       end
    end,
 })
 
-CombatTab:CreateButton({Name = "Réinitialiser Hitbox 🔄", Callback = function()
-    hitboxSize = 2
-    for _, p in pairs(Players:GetPlayers()) do
-        if p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-            p.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1)
-            p.Character.HumanoidRootPart.Transparency = 0
-            p.Character.HumanoidRootPart.CanCollide = true
-        end
-    end
-end})
+-- ══════════════════════════════════════
+-- ONGLET 2 : 👁️ VISUALS (ESP & TRACERS)
+-- ══════════════════════════════════════
+local VisualTab = Window:CreateTab("👁️ Visuals & ESP", 4483362458)
+
+VisualTab:CreateToggle({Name = "Tracers (Lignes)", CurrentValue = false, Callback = function(v) espTracers = v end})
+VisualTab:CreateToggle({Name = "Box (Cadres)", CurrentValue = false, Callback = function(v) espBoxes = v end})
+VisualTab:CreateToggle({Name = "Noms", CurrentValue = false, Callback = function(v) espNames = v end})
+
+local function CreateESP(p)
+    local tracer = Drawing.new("Line")
+    local box = Drawing.new("Square")
+    local name = Drawing.new("Text")
+    RunService.RenderStepped:Connect(function()
+        if p.Character and p.Character:FindFirstChild("HumanoidRootPart") and p ~= LocalPlayer then
+            local rootPos, onScreen = Camera:WorldToViewportPoint(p.Character.HumanoidRootPart.Position)
+            if onScreen then
+                if espTracers then
+                    tracer.Visible = true
+                    tracer.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
+                    tracer.To = Vector2.new(rootPos.X, rootPos.Y)
+                    tracer.Color = Color3.fromRGB(255, 0, 0)
+                else tracer.Visible = false end
+                if espBoxes then
+                    box.Visible = true
+                    box.Size = Vector2.new(2000 / rootPos.Z, 3500 / rootPos.Z)
+                    box.Position = Vector2.new(rootPos.X - box.Size.X / 2, rootPos.Y - box.Size.Y / 2)
+                    box.Color = Color3.fromRGB(255, 255, 255)
+                else box.Visible = false end
+                if espNames then
+                    name.Visible = true
+                    name.Text = p.Name
+                    name.Position = Vector2.new(rootPos.X, rootPos.Y - (box.Size.Y / 2) - 15)
+                    name.Center = true; name.Outline = true; name.Color = Color3.new(1,1,1)
+                else name.Visible = false end
+            else tracer.Visible = false; box.Visible = false; name.Visible = false end
+        else tracer.Visible = false; box.Visible = false; name.Visible = false end
+        if not p.Parent then tracer:Remove(); box:Remove(); name:Remove() end
+    end)
+end
+for _, p in pairs(Players:GetPlayers()) do CreateESP(p) end
+Players.PlayerAdded:Connect(CreateESP)
 
 -- ══════════════════════════════════════
--- ONGLET 2 : MOUVEMENT (BEST FLY & NOCLIP)
+-- ONGLET 3 : ✈️ MOUVEMENT (FLY MOBILE)
 -- ══════════════════════════════════════
 local MoveTab = Window:CreateTab("✈️ Fly & Noclip", 4483362458)
 
-MoveTab:CreateSection("🚀 Vol Directionnel (Optimisé Mobile)")
 MoveTab:CreateToggle({
-   Name = "Activer Fly + Noclip",
+   Name = "Fly + Noclip (Perfect Mobile)",
    CurrentValue = false,
    Callback = function(v)
-       flyActive = v
-       noclipActive = v
+       flyActive, noclipActive = v, v
        if v then
            task.spawn(function()
+               local bv = Instance.new("BodyVelocity", getRoot())
+               local bg = Instance.new("BodyGyro", getRoot())
+               bv.MaxForce = Vector3.new(9e9, 9e9, 9e9)
+               bg.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
                while flyActive do
                    RunService.RenderStepped:Wait()
-                   local root = getRoot()
-                   local hum = getHum()
-                   if root and hum then
-                       hum.PlatformStand = true
-                       local moveDir = hum.MoveDirection
-                       
-                       -- DIRECTION PARFAITE : On se déplace vers là où on regarde
-                       if moveDir.Magnitude > 0 then
-                            root.CFrame = root.CFrame:Lerp(CFrame.new(root.Position, root.Position + Camera.CFrame.LookVector) * CFrame.new(0, 0, -flySpeed), 0.5)
-                       else
-                            root.Velocity = Vector3.new(0,0,0)
-                       end
-                       
-                       -- Contrôles PC additionnels
-                       if UIS:IsKeyDown(Enum.KeyCode.Space) then root.CFrame = root.CFrame * CFrame.new(0, flySpeed, 0) end
-                       if UIS:IsKeyDown(Enum.KeyCode.LeftShift) then root.CFrame = root.CFrame * CFrame.new(0, -flySpeed, 0) end
+                   if getRoot() and getHum() then
+                       getHum().PlatformStand = true
+                       bg.CFrame = Camera.CFrame
+                       local dir = getHum().MoveDirection
+                       bv.Velocity = (dir.Magnitude > 0) and ((Camera.CFrame.LookVector * (dir.Z * -1) + Camera.CFrame.RightVector * dir.X) * (flySpeed * 50)) or Vector3.zero
                    end
                end
+               bv:Destroy(); bg:Destroy()
                if getHum() then getHum().PlatformStand = false end
            end)
        end
    end,
 })
 
-MoveTab:CreateToggle({
-    Name = "Noclip Manuel",
-    CurrentValue = false,
-    Callback = function(v) noclipActive = v end,
-})
-
-MoveTab:CreateSlider({
-   Name = "Vitesse du Vol",
-   Range = {1, 15}, Increment = 0.5, CurrentValue = 2,
-   Callback = function(v) flySpeed = v end,
-})
+MoveTab:CreateSlider({Name = "Vitesse", Range = {1, 50}, Increment = 1, CurrentValue = 3, Callback = function(v) flySpeed = v end})
 
 -- ══════════════════════════════════════
--- ONGLET 3 : VISUELS (ESP)
+-- ONGLET 4 : 🤡 TROLL (CHAOS)
 -- ══════════════════════════════════════
-local VisualTab = Window:CreateTab("👁️ Visuals", 4483362458)
+local TrollTab = Window:CreateTab("🤡 Troll", 4483362458)
 
-VisualTab:CreateToggle({
-   Name = "ESP Auto-Refresh",
+TrollTab:CreateToggle({
+   Name = "Activer Jerk 💦",
    CurrentValue = false,
    Callback = function(v)
-       espActive = v
-       task.spawn(function()
-           while espActive do
-               for _, p in pairs(Players:GetPlayers()) do
-                   if p ~= LocalPlayer and p.Character and not p.Character:FindFirstChild("LuluESP") then
-                       local hl = Instance.new("Highlight", p.Character)
-                       hl.Name = "LuluESP"
-                       hl.FillColor = Color3.fromRGB(255, 0, 0)
+       jerkActive = v
+       if v then
+           task.spawn(function()
+               while jerkActive do
+                   local h = getHum()
+                   if h then
+                       local anim = Instance.new("Animation")
+                       anim.AnimationId = "rbxassetid://35154961" 
+                       local track = h:LoadAnimation(anim)
+                       track:Play(); track:AdjustSpeed(10)
+                       task.wait(0.2); track:Stop()
                    end
                end
-               task.wait(1)
-           end
-           for _, p in pairs(Players:GetPlayers()) do
-               if p.Character and p.Character:FindFirstChild("LuluESP") then p.Character.LuluESP:Destroy() end
-           end
-       end)
+           end)
+       end
    end,
 })
 
--- ══════════════════════════════════════
--- ONGLET 4 : EMOTE JERK (IY STYLE)
--- ══════════════════════════════════════
-local FunTab = Window:CreateTab("🎭 Fun & Emotes", 4483362458)
-
-FunTab:CreateButton({
-    Name = "Prendre le Tool : Jerk 💦",
-    Callback = function()
-        local tool = Instance.new("Tool")
-        tool.Name = "Jerk 💦"
-        tool.RequiresHandle = false
-        tool.Parent = LocalPlayer.Backpack
-        local track = nil
-        
-        tool.Equipped:Connect(function()
-            local h = getHum()
-            if h then
-                local a = Instance.new("Animation")
-                -- ID Universel pour l'emote Jerk
-                a.AnimationId = "rbxassetid://35154961" 
-                track = h:LoadAnimation(a)
-                track:Play()
-                track:AdjustSpeed(5)
-                track.Looped = true
-            end
-        end)
-        
-        tool.Unequipped:Connect(function() 
-            if track then 
-                track:Stop()
-                track:Destroy() 
-            end 
-        end)
-        Rayfield:Notify({Title = "Inventaire", Content = "Équipez l'objet pour commencer l'animation !", Duration = 3})
-    end
-})
+TrollTab:CreateToggle({Name = "Spin-Bot (Tornado)", CurrentValue = false, Callback = function(v) spinning = v end})
+TrollTab:CreateSlider({Name = "Vitesse Spin", Range = {10, 300}, Increment = 10, CurrentValue = 50, Callback = function(v) spinSpeed = v end})
 
 -- ══════════════════════════════════════
--- LOGIQUE NOCLIP & AIMBOT (BOUCLES)
+-- LOGIQUE FINALE (BOUCLES)
 -- ══════════════════════════════════════
 RunService.Stepped:Connect(function()
     if noclipActive and LocalPlayer.Character then
@@ -227,22 +184,9 @@ RunService.Stepped:Connect(function()
 end)
 
 RunService.RenderStepped:Connect(function()
-    if AimbotActive then
-        local targetHead = nil
-        local dist = AimDistance
-        for _, p in pairs(Players:GetPlayers()) do
-            if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("Head") then
-                if TargetPlayer == "Tous" or TargetPlayer == p.Name then
-                    local d = (LocalPlayer.Character.HumanoidRootPart.Position - p.Character.HumanoidRootPart.Position).Magnitude
-                    if d < dist then
-                        local pos, vis = Camera:WorldToViewportPoint(p.Character.Head.Position)
-                        if vis then dist = d; targetHead = p.Character.Head end
-                    end
-                end
-            end
-        end
-        if targetHead then Camera.CFrame = CFrame.new(Camera.CFrame.Position, targetHead.Position) end
+    if spinning and getRoot() then 
+        getRoot().CFrame = getRoot().CFrame * CFrame.Angles(0, math.rad(spinSpeed), 0) 
     end
 end)
 
-Rayfield:Notify({Title = "Luluclc3 Master V17", Content = "Le script ultime est chargé !", Duration = 5})
+Rayfield:Notify({Title = "Luluclc3 Master V24", Content = "Arsenal complet prêt, mon cher !", Duration = 5})
