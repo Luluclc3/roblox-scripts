@@ -1,6 +1,6 @@
 -- ══════════════════════════════════════════════════════
---           LULUCLC3 MENU v4.0 - ULTIMATE EDITION 👑
---                EMOTES, AIMBOT & SPIN-BOT
+--           LULUCLC3 MENU v6.0 - HYBRID EDITION 👑
+--                FLY OPTIMISÉ PC & MOBILE
 -- ══════════════════════════════════════════════════════
 
 local Players = game:GetService("Players")
@@ -8,173 +8,165 @@ local RunService = game:GetService("RunService")
 local UIS = game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
-local Mouse = LocalPlayer:GetMouse()
 
 -- ── Chargement Rayfield ──
 local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
 
 local Window = Rayfield:CreateWindow({
-   Name = "Luluclc3 Ultimate 👑",
-   LoadingTitle = "Chargement du Menu...",
-   LoadingSubtitle = "by Luluclc3 • Multi-Outils",
+   Name = "Luluclc3 Hybrid 👑",
+   LoadingTitle = "Optimisation Mobile/PC...",
+   LoadingSubtitle = "Version 6.0 - Fly Pro",
    Theme = "Default",
-   ConfigurationSaving = { Enabled = true, Folder = "Luluclc3_V4" }
+   ConfigurationSaving = { Enabled = true, Folder = "Luluclc3_V6" }
 })
 
 -- ══════════════════════════════════════
--- HELPERS
+-- VARIABLES ET ÉTATS
 -- ══════════════════════════════════════
+local flyActive = false
+local flySpeed = 60
+local AimbotEnabled = false
+local HitboxSize = 2
+
 local function getRoot() return LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") end
 local function getHum() return LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") end
 
 -- ══════════════════════════════════════
--- ONGLET 1 : COMBAT (AIMBOT & HITBOX)
+-- ONGLET 1 : FLY OPTIMISÉ (PC & MOBILE)
+-- ══════════════════════════════════════
+local FlyTab = Window:CreateTab("✈️ Fly Pro", 4483362458)
+
+FlyTab:CreateToggle({
+   Name = "Activer le Vol (Fly)",
+   CurrentValue = false,
+   Callback = function(v)
+       flyActive = v
+       local root = getRoot()
+       if not root then return end
+       
+       if v then
+           -- Création des forces physiques
+           local bg = Instance.new("BodyGyro", root)
+           bg.Name = "FlyGyro"
+           bg.maxTorque = Vector3.new(9e9, 9e9, 9e9)
+           bg.p = 9e4
+           
+           local bv = Instance.new("BodyVelocity", root)
+           bv.Name = "FlyVel"
+           bv.maxForce = Vector3.new(9e9, 9e9, 9e9)
+           
+           task.spawn(function()
+               while flyActive and getRoot() do
+                   RunService.RenderStepped:Wait()
+                   local h = getHum()
+                   if h then h.PlatformStand = true end
+                   
+                   -- Détection de direction intelligente
+                   local moveDir = Vector3.new(0,0,0)
+                   
+                   -- Contrôles PC (Clavier)
+                   if UIS:IsKeyDown(Enum.KeyCode.W) then moveDir = moveDir + Camera.CFrame.LookVector end
+                   if UIS:IsKeyDown(Enum.KeyCode.S) then moveDir = moveDir - Camera.CFrame.LookVector end
+                   if UIS:IsKeyDown(Enum.KeyCode.A) then moveDir = moveDir - Camera.CFrame.RightVector end
+                   if UIS:IsKeyDown(Enum.KeyCode.D) then moveDir = moveDir + Camera.CFrame.RightVector end
+                   if UIS:IsKeyDown(Enum.KeyCode.Space) then moveDir = moveDir + Vector3.new(0,1,0) end
+                   if UIS:IsKeyDown(Enum.KeyCode.LeftShift) then moveDir = moveDir - Vector3.new(0,1,0) end
+                   
+                   -- Contrôles Mobile (Joystick)
+                   if h and h.MoveDirection.Magnitude > 0 then
+                       moveDir = moveDir + (h.MoveDirection * 1.5) -- Utilise le joystick
+                   end
+                   
+                   bv.Velocity = moveDir * flySpeed
+                   bg.CFrame = Camera.CFrame
+               end
+               -- Nettoyage
+               if bg then bg:Destroy() end
+               if bv then bv:Destroy() end
+               if getHum() then getHum().PlatformStand = false end
+           end)
+       end
+   end,
+})
+
+FlyTab:CreateSlider({
+   Name = "Vitesse du Vol",
+   Range = {10, 500}, Increment = 5, CurrentValue = 60,
+   Callback = function(v) flySpeed = v end,
+})
+
+-- ══════════════════════════════════════
+-- ONGLET 2 : COMBAT & AIMBOT
 -- ══════════════════════════════════════
 local CombatTab = Window:CreateTab("⚔️ Combat", 4483362458)
-local AimbotEnabled = false
-local AimSmoothing = 5
-
-local function getClosestPlayer()
-    local closest, dist = nil, math.huge
-    for _, p in pairs(Players:GetPlayers()) do
-        if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("Head") then
-            local pos, onScreen = Camera:WorldToViewportPoint(p.Character.Head.Position)
-            if onScreen then
-                local mag = (Vector2.new(pos.X, pos.Y) - Vector2.new(Mouse.X, Mouse.Y)).Magnitude
-                if mag < dist then
-                    dist = mag
-                    closest = p.Character.Head
-                end
-            end
-        end
-    end
-    return closest
-end
 
 CombatTab:CreateToggle({
-   Name = "Aimbot (Auto-Lock)",
+   Name = "Aimbot Auto-Lock",
    CurrentValue = false,
    Callback = function(v) AimbotEnabled = v end,
 })
 
 CombatTab:CreateSlider({
-   Name = "Lissage Aimbot (Smoothing)",
-   Range = {1, 20}, Increment = 1, CurrentValue = 5,
-   Callback = function(v) AimSmoothing = v end,
-})
-
-RunService.RenderStepped:Connect(function()
-    if AimbotEnabled then
-        local target = getClosestPlayer()
-        if target then
-            Camera.CFrame = Camera.CFrame:Lerp(CFrame.new(Camera.CFrame.Position, target.Position), 1/AimSmoothing)
-        end
-    end
-end)
-
--- ══════════════════════════════════════
--- ONGLET 2 : EMOTES & SPIN (FUN)
--- ══════════════════════════════════════
-local EmoteTab = Window:CreateTab("💃 Emotes & Spin", 4483362458)
-local spinSpeed = 20
-local spinning = false
-
-EmoteTab:CreateSection("🌪️ Spin-Bot (Tornade)")
-EmoteTab:CreateToggle({
-   Name = "Activer le Spin",
-   CurrentValue = false,
+   Name = "Taille Hitbox Ennemis",
+   Range = {2, 100}, Increment = 1, CurrentValue = 2,
    Callback = function(v)
-       spinning = v
-       task.spawn(function()
-           while spinning do
-               local root = getRoot()
-               if root then
-                   root.CFrame = root.CFrame * CFrame.Angles(0, math.rad(spinSpeed), 0)
-               end
-               task.wait()
-           end
-       end)
-   end,
-})
-
-EmoteTab:CreateSlider({
-   Name = "Vitesse du Spin",
-   Range = {5, 150}, Increment = 5, Suffix = " deg", CurrentValue = 20,
-   Callback = function(v) spinSpeed = v end,
-})
-
-EmoteTab:CreateSection("🎭 Emotes Serveur")
-local emotes = {
-    ["Dancer"] = "rbxassetid://3333499508",
-    ["Joy"] = "rbxassetid://3337768730",
-    ["Point"] = "rbxassetid://128744474",
-    ["Wave"] = "rbxassetid://128745032"
-}
-
-for name, id in pairs(emotes) do
-    EmoteTab:CreateButton({
-        Name = "Jouer : " .. name,
-        Callback = function()
-            local h = getHum()
-            if h then
-                local anim = Instance.new("Animation")
-                anim.AnimationId = id
-                local load = h:LoadAnimation(anim)
-                load:Play()
-            end
-        end,
-    })
-end
-
--- ══════════════════════════════════════
--- ONGLET 3 : MOUVEMENT (FLY & SPEED)
--- ══════════════════════════════════════
-local MoveTab = Window:CreateTab("🏃 Mouvement", 4483362458)
-
-MoveTab:CreateSlider({
-   Name = "Vitesse de Marche",
-   Range = {16, 500}, Increment = 1, CurrentValue = 16,
-   Callback = function(v) if getHum() then getHum().WalkSpeed = v end end,
-})
-
-MoveTab:CreateButton({
-    Name = "Noclip (Traverser les murs)",
-    Callback = function()
-        _G.Noclip = not _G.Noclip
-        RunService.Stepped:Connect(function()
-            if _G.Noclip and LocalPlayer.Character then
-                for _, part in pairs(LocalPlayer.Character:GetDescendants()) do
-                    if part:IsA("BasePart") then part.CanCollide = false end
-                end
-            end
-        end)
-        Rayfield:Notify({Title = "Noclip", Content = _G.Noclip and "Activé" or "Désactivé"})
-    end
-})
-
--- ══════════════════════════════════════
--- ONGLET 4 : VISUELS (ESP)
--- ══════════════════════════════════════
-local VisualTab = Window:CreateTab("👁️ Visuals", 4483362458)
-
-VisualTab:CreateButton({
-   Name = "ESP Box & Name",
-   Callback = function()
        for _, p in pairs(Players:GetPlayers()) do
-           if p ~= LocalPlayer and p.Character then
-               local h = Instance.new("Highlight", p.Character)
-               h.FillColor = Color3.fromRGB(0, 255, 100)
-               h.OutlineTransparency = 0
+           if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+               p.Character.HumanoidRootPart.Size = Vector3.new(v, v, v)
+               p.Character.HumanoidRootPart.Transparency = 0.7
            end
        end
    end,
 })
 
 -- ══════════════════════════════════════
--- PARAMÈTRES
+-- ONGLET 3 : EMOTES (BRANLER & DANSES)
 -- ══════════════════════════════════════
-local SettTab = Window:CreateTab("⚙️ Paramètres", 4483362458)
-SettTab:CreateButton({Name = "Détruire le Menu", Callback = function() Rayfield:Destroy() end})
+local EmoteTab = Window:CreateTab("🎭 Emotes Fun", 4483362458)
+
+EmoteTab:CreateButton({
+    Name = "Emote : Branler 💦",
+    Callback = function()
+        local h = getHum()
+        if h then
+            local anim = Instance.new("Animation")
+            anim.AnimationId = "rbxassetid://3333499508"
+            local t = h:LoadAnimation(anim)
+            t:Play()
+            t:AdjustSpeed(5) -- Très rapide pour l'effet
+        end
+    end
+})
+
+EmoteTab:CreateButton({
+    Name = "Danse : Techno 🕺",
+    Callback = function()
+        local anim = Instance.new("Animation")
+        anim.AnimationId = "rbxassetid://3338048109"
+        getHum():LoadAnimation(anim):Play()
+    end
+})
+
+-- ══════════════════════════════════════
+-- BOUCLES DE MISE À JOUR
+-- ══════════════════════════════════════
+RunService.RenderStepped:Connect(function()
+    -- Aimbot Logic
+    if AimbotEnabled then
+        local target = nil
+        local dist = math.huge
+        for _, p in pairs(Players:GetPlayers()) do
+            if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("Head") then
+                local pos, vis = Camera:WorldToViewportPoint(p.Character.Head.Position)
+                if vis then
+                    local m = (Vector2.new(pos.X, pos.Y) - UIS:GetMouseLocation()).Magnitude
+                    if m < dist then dist = m; target = p.Character.Head end
+                end
+            end
+        end
+        if target then Camera.CFrame = CFrame.new(Camera.CFrame.Position, target.Position) end
+    end
+end)
 
 Rayfield:LoadConfiguration()
-Rayfield:Notify({Title = "Luluclc3 V4 Loaded", Content = "Le menu est prêt pour le serveur !", Duration = 5})
+Rayfield:Notify({Title = "Luluclc3 V6.0", Content = "Le Fly Hybrid est opérationnel !", Duration = 5})
