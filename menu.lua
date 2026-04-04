@@ -1,182 +1,165 @@
 -- ══════════════════════════════════════════════════════
--- LULUCLC3 MENU v2.4 MOBILE PREMIUM - LE PLUS BEAU
--- by Luluclc3 • Optimisé 100% Mobile • Design Néon
+--           LULUCLC3 MENU v3.0 - OMNI EDITION 👑
+--                SERVER-INTERACTION FOCUS
 -- ══════════════════════════════════════════════════════
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
+local UIS = game:GetService("UserInputService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "Luluclc3MobilePremium"
-ScreenGui.ResetOnSpawn = false
-ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+-- ── Chargement Rayfield ──
+local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
 
--- ==================== BOUTON FLOTTANT (TRÈS BEAU) ====================
-local FloatingBtn = Instance.new("TextButton")
-FloatingBtn.Size = UDim2.new(0, 70, 0, 70)
-FloatingBtn.Position = UDim2.new(0, 20, 1, -100)
-FloatingBtn.BackgroundColor3 = Color3.fromRGB(138, 43, 226)
-FloatingBtn.Text = "👑"
-FloatingBtn.TextColor3 = Color3.new(1,1,1)
-FloatingBtn.TextScaled = true
-FloatingBtn.Font = Enum.Font.GothamBold
-FloatingBtn.Parent = ScreenGui
+local Window = Rayfield:CreateWindow({
+   Name = "Luluclc3 Omni Menu 👑",
+   LoadingTitle = "Luluclc3 V3.0",
+   LoadingSubtitle = "Server-Sync Edition",
+   Theme = "DarkBlue",
+   ConfigurationSaving = { Enabled = true, Folder = "Luluclc3_V3" }
+})
 
-local corner = Instance.new("UICorner", FloatingBtn)
-corner.CornerRadius = UDim.new(0, 50)
-local stroke = Instance.new("UIStroke", FloatingBtn)
-stroke.Thickness = 6
-stroke.Color = Color3.fromRGB(255, 215, 0)
-stroke.Transparency = 0.3
+-- ══════════════════════════════════════
+-- FONCTIONS CORE (Sécurité & Serveur)
+-- ══════════════════════════════════════
+local function getRoot() return LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") end
+local function getHum() return LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") end
 
-local glow = Instance.new("ImageLabel", FloatingBtn)
-glow.Size = UDim2.new(1.6, 0, 1.6, 0)
-glow.Position = UDim2.new(-0.3, 0, -0.3, 0)
-glow.BackgroundTransparency = 1
-glow.Image = "rbxassetid://1316045217"
-glow.ImageColor3 = Color3.fromRGB(138, 43, 226)
-glow.ImageTransparency = 0.6
-glow.ZIndex = -1
-
--- Draggable
-FloatingBtn.MouseButton1Down:Connect(function()
-   local dragging = true
-   local dragInput
-   local dragStart
-   local startPos
-
-   local function update(input)
-      local delta = input.Position - dragStart
-      FloatingBtn.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-   end
-
-   FloatingBtn.InputBegan:Connect(function(input)
-      if input.UserInputType == Enum.UserInputType.MouseButton1 then
-         dragging = true
-         dragStart = input.Position
-         startPos = FloatingBtn.Position
-      end
-   end)
-
-   FloatingBtn.InputEnded:Connect(function(input)
-      if input.UserInputType == Enum.UserInputType.MouseButton1 then
-         dragging = false
-      end
-   end)
-end)
-
--- ==================== FENÊTRE PRINCIPALE ====================
-local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0.85, 0, 0.75, 0)
-MainFrame.Position = UDim2.new(0.075, 0, 0.15, 0)
-MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
-MainFrame.Visible = false
-MainFrame.Parent = ScreenGui
-
-local mainCorner = Instance.new("UICorner", MainFrame)
-mainCorner.CornerRadius = UDim.new(0, 20)
-local mainStroke = Instance.new("UIStroke", MainFrame)
-mainStroke.Thickness = 3
-mainStroke.Color = Color3.fromRGB(138, 43, 226)
-
--- Titre
-local Title = Instance.new("TextLabel")
-Title.Size = UDim2.new(1, 0, 0, 60)
-Title.BackgroundTransparency = 1
-Title.Text = "LULUCLC3 MENU 👑 v2.4"
-Title.TextColor3 = Color3.fromRGB(255, 215, 0)
-Title.TextScaled = true
-Title.Font = Enum.Font.GothamBlack
-Title.Parent = MainFrame
-
--- Bouton fermer
-local CloseBtn = Instance.new("TextButton")
-CloseBtn.Size = UDim2.new(0, 50, 0, 50)
-CloseBtn.Position = UDim2.new(1, -60, 0, 5)
-CloseBtn.BackgroundTransparency = 1
-CloseBtn.Text = "✕"
-CloseBtn.TextColor3 = Color3.new(1, 0.3, 0.3)
-CloseBtn.TextScaled = true
-CloseBtn.Font = Enum.Font.GothamBold
-CloseBtn.Parent = MainFrame
-CloseBtn.MouseButton1Click:Connect(function() MainFrame.Visible = false end)
-
-FloatingBtn.MouseButton1Click:Connect(function()
-   MainFrame.Visible = not MainFrame.Visible
-end)
-
--- ==================== FLY MOBILE (LE PLUS BEAU) ====================
-local flyActive = false
-local flySpeed = 60
-local mobileFlyFrame = nil
-
-local function createFlyUI()
-   if mobileFlyFrame then mobileFlyFrame:Destroy() end
-   mobileFlyFrame = Instance.new("Frame")
-   mobileFlyFrame.Size = UDim2.new(0.4, 0, 0.5, 0)
-   mobileFlyFrame.Position = UDim2.new(0.6, 0, 0.4, 0)
-   mobileFlyFrame.BackgroundTransparency = 0.3
-   mobileFlyFrame.BackgroundColor3 = Color3.fromRGB(10,10,15)
-   mobileFlyFrame.Parent = ScreenGui
-
-   Instance.new("UICorner", mobileFlyFrame).CornerRadius = UDim.new(0, 25)
-   Instance.new("UIStroke", mobileFlyFrame).Thickness = 4
-
-   local buttons = {
-      {name="▲", pos=UDim2.new(0.3,0,0.1,0), color=Color3.fromRGB(0,255,100)},
-      {name="▼", pos=UDim2.new(0.3,0,0.7,0), color=Color3.fromRGB(255,80,0)},
-      {name="◀", pos=UDim2.new(0.05,0,0.4,0), color=Color3.fromRGB(0,170,255)},
-      {name="▶", pos=UDim2.new(0.55,0,0.4,0), color=Color3.fromRGB(0,170,255)},
-      {name="FWD", pos=UDim2.new(0.3,0,0.4,0), color=Color3.fromRGB(200,0,255)},
-   }
-
-   for _, b in ipairs(buttons) do
-      local btn = Instance.new("TextButton")
-      btn.Size = UDim2.new(0, 70, 0, 70)
-      btn.Position = b.pos
-      btn.BackgroundColor3 = b.color
-      btn.Text = b.name
-      btn.TextColor3 = Color3.new(1,1,1)
-      btn.Font = Enum.Font.GothamBlack
-      btn.TextSize = 28
-      btn.Parent = mobileFlyFrame
-      Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 20)
-      Instance.new("UIStroke", btn).Thickness = 3
-   end
-
-   -- Stop button
-   local stop = Instance.new("TextButton")
-   stop.Size = UDim2.new(0.9,0,0,60)
-   stop.Position = UDim2.new(0.05,0,0.85,0)
-   stop.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
-   stop.Text = "⛔ STOP FLY"
-   stop.TextColor3 = Color3.new(1,1,1)
-   stop.TextScaled = true
-   stop.Font = Enum.Font.GothamBlack
-   stop.Parent = mobileFlyFrame
-   Instance.new("UICorner", stop).CornerRadius = UDim.new(0, 15)
-   stop.MouseButton1Click:Connect(function()
-      flyActive = false
-      if mobileFlyFrame then mobileFlyFrame:Destroy() end
-   end)
+local function fireServerChat(msg)
+    local chatEvents = ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents")
+    if chatEvents and chatEvents:FindFirstChild("SayMessageRequest") then
+        chatEvents.SayMessageRequest:FireServer(msg, "All")
+    end
 end
 
--- ==================== TOUTES LES FONCTIONNALITÉS (comme avant) ====================
--- Mouvement, Troll, Danses, TP, World, etc. sont inclus dans la version complète sur GitHub.
+-- ══════════════════════════════════════
+-- ONGLET 1 : MOUVEMENT (Visibilité Serveur)
+-- ══════════════════════════════════════
+local MoveTab = Window:CreateTab("🏃 Physique", 4483362458)
 
-notify = function(title, text)
-   -- Notification simple
-   local notif = Instance.new("Frame", ScreenGui)
-   notif.Size = UDim2.new(0, 300, 0, 80)
-   notif.Position = UDim2.new(0.5, -150, 0, 20)
-   notif.BackgroundColor3 = Color3.fromRGB(30,30,35)
-   Instance.new("UICorner", notif).CornerRadius = UDim.new(0,15)
-   -- (code notification complet dans la version GitHub)
-end
+MoveTab:CreateSection("⚡ Synchronisation Serveur")
+MoveTab:CreateSlider({
+   Name = "Vitesse Réelle",
+   Range = {16, 500}, Increment = 1, Suffix = " studs", CurrentValue = 16,
+   Callback = function(v) if getHum() then getHum().WalkSpeed = v end end,
+})
 
--- Le reste du code (vitesse, fly, danses, troll, etc.) est déjà dans ton repo.
+MoveTab:CreateToggle({
+   Name = "Infinite Jump (Visible)",
+   CurrentValue = false,
+   Callback = function(v)
+      _G.InfJump = v
+      UIS.JumpRequest:Connect(function()
+          if _G.InfJump and getHum() then getHum():ChangeState("Jumping") end
+      end)
+   end,
+})
 
-print("Luluclc3 Menu v2.4 Mobile Premium chargé avec succès !")
+-- ══════════════════════════════════════
+-- ONGLET 2 : COMBAT & HITBOX
+-- ══════════════════════════════════════
+local CombatTab = Window:CreateTab("⚔️ Combat", 4483362458)
+
+CombatTab:CreateSection("🎯 Avantage Serveur")
+CombatTab:CreateSlider({
+   Name = "Portée Hitbox (Taille)",
+   Range = {2, 20}, Increment = 1, Suffix = " studs", CurrentValue = 2,
+   Callback = function(v)
+       _G.HitboxSize = v
+       task.spawn(function()
+           while _G.HitboxSize > 2 do
+               task.wait(1)
+               for _, p in pairs(Players:GetPlayers()) do
+                   if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                       p.Character.HumanoidRootPart.Size = Vector3.new(_G.HitboxSize, _G.HitboxSize, _G.HitboxSize)
+                       p.Character.HumanoidRootPart.Transparency = 0.7
+                       p.Character.HumanoidRootPart.CanCollide = false
+                   end
+               end
+           end
+       end)
+   end,
+})
+
+-- ══════════════════════════════════════
+-- ONGLET 3 : RÉSEAU & LAG (Troll)
+-- ══════════════════════════════════════
+local NetTab = Window:CreateTab("🌐 Réseau", 4483362458)
+
+NetTab:CreateSection("📡 Simulation Lag")
+NetTab:CreateToggle({
+   Name = "Invisible / Blink",
+   CurrentValue = false,
+   Callback = function(v)
+       if v then 
+           LocalPlayer.Character.LowerTorso.Anchored = true 
+           notify("Blink", "Ton corps est resté sur place pour les autres !")
+       else 
+           LocalPlayer.Character.LowerTorso.Anchored = false 
+       end
+   end,
+})
+
+-- ══════════════════════════════════════
+-- ONGLET 4 : INTERACTION OBJETS
+-- ══════════════════════════════════════
+local ObjectTab = Window:CreateTab("📦 Objets", 4483362458)
+
+ObjectTab:CreateButton({
+   Name = "Prendre tous les outils (Tools)",
+   Callback = function()
+       for _, v in pairs(workspace:GetDescendants()) do
+           if v:IsA("Tool") and v:FindFirstChild("Handle") then
+               v.Handle.CFrame = getRoot().CFrame
+           end
+       end
+       notify("Serveur", "Tentative de ramassage global terminée.")
+   end,
+})
+
+-- ══════════════════════════════════════
+-- ONGLET 5 : SERVEUR & ANNONCES
+-- ══════════════════════════════════════
+local ServerTab = Window:CreateTab("📢 Annonces", 4483362458)
+
+ServerTab:CreateInput({
+   Name = "Message Serveur Force",
+   PlaceholderText = "Texte...",
+   Callback = function(txt) fireServerChat("📢 [SYSTEME] : " .. txt) end,
+})
+
+ServerTab:CreateButton({
+   Name = "Crash Local (Anti-Kick)",
+   Callback = function()
+       while true do end -- Utile uniquement pour figer votre client avant un ban
+   end,
+})
+
+-- ══════════════════════════════════════
+-- ONGLET 6 : VISUELS (ESP)
+-- ══════════════════════════════════════
+local VisualTab = Window:CreateTab("👁️ Visuals", 4483362458)
+
+VisualTab:CreateButton({
+   Name = "ESP Highlight (X-Ray)",
+   Callback = function()
+       for _, p in pairs(Players:GetPlayers()) do
+           if p ~= LocalPlayer and p.Character then
+               local h = Instance.new("Highlight", p.Character)
+               h.FillColor = Color3.fromRGB(255, 0, 0)
+               h.OutlineColor = Color3.new(1,1,1)
+           end
+       end
+   end,
+})
+
+-- ══════════════════════════════════════
+-- PARAMÈTRES
+-- ══════════════════════════════════════
+local SettingsTab = Window:CreateTab("⚙️ Paramètres", 4483362458)
+SettingsTab:CreateButton({ Name = "Détruire le Menu", Callback = function() Rayfield:Destroy() end })
+
+Rayfield:LoadConfiguration()
+Rayfield:Notify({Title = "Luluclc3 V3", Content = "Prêt pour le serveur, mon cher !", Duration = 5})
