@@ -1,6 +1,6 @@
 -- ══════════════════════════════════════════════════════
---           LULUCLC3 MENU v7.0 - REFRESH EDITION 👑
---                ESP AUTO-LOAD & FULL SYNC
+--           LULUCLC3 MENU v9.0 - TOOL EDITION 👑
+--                ALL-IN-ONE + EMOTE ITEM
 -- ══════════════════════════════════════════════════════
 
 local Players = game:GetService("Players")
@@ -13,69 +13,102 @@ local Camera = workspace.CurrentCamera
 local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
 
 local Window = Rayfield:CreateWindow({
-   Name = "Luluclc3 V7 Elite 👑",
-   LoadingTitle = "Actualisation des Joueurs...",
-   LoadingSubtitle = "Version 7.0 - ESP Refresh",
+   Name = "Luluclc3 Ultimate V9 👑",
+   LoadingTitle = "Génération des Objets...",
+   LoadingSubtitle = "Version 9.0 - Master Tool",
    Theme = "Default",
-   ConfigurationSaving = { Enabled = true, Folder = "Luluclc3_V7" }
+   ConfigurationSaving = { Enabled = true, Folder = "Luluclc3_V9" }
 })
 
 -- ══════════════════════════════════════
 -- VARIABLES ET ÉTATS
 -- ══════════════════════════════════════
-local espActive = false
+local AimbotActive = false
+local AimDistance = 999999
 local flyActive = false
 local flySpeed = 70
-local AimbotEnabled = false
+local espActive = false
+local hitboxSize = 2
+local spinning = false
+local spinSpeed = 50
 
 local function getRoot() return LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") end
 local function getHum() return LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") end
 
 -- ══════════════════════════════════════
--- ONGLET ESP (RAFRAÎCHISSEMENT CONTINU)
+-- FONCTION : CRÉATION DU TOOL EMOTE
 -- ══════════════════════════════════════
-local VisualTab = Window:CreateTab("👁️ Visuals", 4483362458)
+local function GiveEmoteTool()
+    local tool = Instance.new("Tool")
+    tool.Name = "Branler 💦"
+    tool.RequiresHandle = false
+    tool.Parent = LocalPlayer.Backpack
+    
+    local animTrack = nil
+    
+    tool.Equipped:Connect(function()
+        local h = getHum()
+        if h then
+            local anim = Instance.new("Animation")
+            anim.AnimationId = "rbxassetid://3333499508"
+            animTrack = h:LoadAnimation(anim)
+            animTrack:Play()
+            animTrack:AdjustSpeed(5)
+            Rayfield:Notify({Title = "Emote", Content = "Activation de l'emote !", Duration = 2})
+        end
+    end)
+    
+    tool.Unequipped:Connect(function()
+        if animTrack then
+            animTrack:Stop()
+            animTrack:Destroy()
+        end
+    end)
+end
 
-VisualTab:CreateToggle({
-   Name = "ESP Auto-Refresh (Tout le monde)",
+-- ══════════════════════════════════════
+-- ONGLET 1 : COMBAT (AIMBOT & HITBOX)
+-- ══════════════════════════════════════
+local CombatTab = Window:CreateTab("⚔️ Combat Elite", 4483362458)
+
+CombatTab:CreateToggle({
+   Name = "Aimbot (Auto-Lock)",
    CurrentValue = false,
+   Callback = function(v) AimbotActive = v end,
+})
+
+CombatTab:CreateInput({
+   Name = "Distance Aimbot (Nombre)",
+   PlaceholderText = "Ex: 999999",
+   Callback = function(txt) AimDistance = tonumber(txt) or 999999 end,
+})
+
+CombatTab:CreateSlider({
+   Name = "Taille Hitbox Ennemis",
+   Range = {2, 100}, Increment = 1, Suffix = " studs", CurrentValue = 2,
    Callback = function(v)
-       espActive = v
-       if v then
-           task.spawn(function()
-               while espActive do
-                   for _, p in pairs(Players:GetPlayers()) do
-                       if p ~= LocalPlayer and p.Character then
-                           -- Si le joueur n'a pas de contour, on lui en met un
-                           if not p.Character:FindFirstChild("LuluESP") then
-                               local highlight = Instance.new("Highlight")
-                               highlight.Name = "LuluESP"
-                               highlight.Parent = p.Character
-                               highlight.FillColor = Color3.fromRGB(255, 0, 0) -- Rouge
-                               highlight.OutlineColor = Color3.new(1, 1, 1) -- Blanc
-                               highlight.FillTransparency = 0.5
-                           end
-                       end
-                   end
-                   task.wait(1) -- Rafraîchit toutes les secondes
-               end
-               -- Nettoyage quand on éteint
+       hitboxSize = v
+       task.spawn(function()
+           while true do
+               task.wait(2)
                for _, p in pairs(Players:GetPlayers()) do
-                   if p.Character and p.Character:FindFirstChild("LuluESP") then
-                       p.Character.LuluESP:Destroy()
+                   if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                       p.Character.HumanoidRootPart.Size = Vector3.new(v, v, v)
+                       p.Character.HumanoidRootPart.Transparency = 0.7
+                       p.Character.HumanoidRootPart.CanCollide = false
                    end
                end
-           end)
-       end
+           end
+       end)
    end,
 })
 
 -- ══════════════════════════════════════
--- ONGLET FLY (HYBRIDE PC/MOBILE)
+-- ONGLET 2 : FLY & MOUVEMENT
 -- ══════════════════════════════════════
-local FlyTab = Window:CreateTab("✈️ Fly Hybrid", 4483362458)
+local MoveTab = Window:CreateTab("✈️ Fly Pro", 4483362458)
 
-FlyTab:CreateToggle({
+MoveTab:CreateToggle({
    Name = "Activer le Vol",
    CurrentValue = false,
    Callback = function(v)
@@ -94,18 +127,14 @@ FlyTab:CreateToggle({
                    RunService.RenderStepped:Wait()
                    local h = getHum()
                    if h then h.PlatformStand = true end
-                   
                    local moveDir = Vector3.zero
-                   -- Clavier PC
                    if UIS:IsKeyDown(Enum.KeyCode.W) then moveDir += Camera.CFrame.LookVector end
                    if UIS:IsKeyDown(Enum.KeyCode.S) then moveDir -= Camera.CFrame.LookVector end
                    if UIS:IsKeyDown(Enum.KeyCode.A) then moveDir -= Camera.CFrame.RightVector end
                    if UIS:IsKeyDown(Enum.KeyCode.D) then moveDir += Camera.CFrame.RightVector end
                    if UIS:IsKeyDown(Enum.KeyCode.Space) then moveDir += Vector3.new(0,1,0) end
                    if UIS:IsKeyDown(Enum.KeyCode.LeftShift) then moveDir -= Vector3.new(0,1,0) end
-                   -- Joystick Mobile
                    if h and h.MoveDirection.Magnitude > 0 then moveDir += h.MoveDirection end
-                   
                    bv.Velocity = moveDir * flySpeed
                    bg.CFrame = Camera.CFrame
                end
@@ -117,56 +146,84 @@ FlyTab:CreateToggle({
    end,
 })
 
-FlyTab:CreateSlider({
-   Name = "Vitesse du Fly",
+MoveTab:CreateSlider({
+   Name = "Vitesse Fly",
    Range = {10, 500}, Increment = 5, CurrentValue = 70,
    Callback = function(v) flySpeed = v end,
 })
 
 -- ══════════════════════════════════════
--- ONGLET COMBAT & EMOTES
+-- ONGLET 3 : VISUELS (ESP AUTO-REFRESH)
 -- ══════════════════════════════════════
-local CombatTab = Window:CreateTab("⚔️ Combat & Fun", 4483362458)
+local VisualTab = Window:CreateTab("👁️ Visuals", 4483362458)
 
-CombatTab:CreateToggle({
-   Name = "Aimbot (Auto-Lock)",
+VisualTab:CreateToggle({
+   Name = "ESP Auto-Refresh",
    CurrentValue = false,
-   Callback = function(v) AimbotEnabled = v end,
+   Callback = function(v)
+       espActive = v
+       if v then
+           task.spawn(function()
+               while espActive do
+                   for _, p in pairs(Players:GetPlayers()) do
+                       if p ~= LocalPlayer and p.Character and not p.Character:FindFirstChild("LuluESP") then
+                           local hl = Instance.new("Highlight", p.Character)
+                           hl.Name = "LuluESP"
+                           hl.FillColor = Color3.fromRGB(255, 0, 0)
+                       end
+                   end
+                   task.wait(1)
+               end
+               for _, p in pairs(Players:GetPlayers()) do
+                   if p.Character and p.Character:FindFirstChild("LuluESP") then p.Character.LuluESP:Destroy() end
+               end
+           end)
+       end
+   end,
 })
 
-CombatTab:CreateButton({
-    Name = "Emote : Branler 💦",
+-- ══════════════════════════════════════
+-- ONGLET 4 : FUN & TOOL GENERATOR
+-- ══════════════════════════════════════
+local FunTab = Window:CreateTab("🎭 Fun & Tools", 4483362458)
+
+FunTab:CreateButton({
+    Name = "Obtenir le Tool : Branler 💦",
     Callback = function()
-        local h = getHum()
-        if h then
-            local anim = Instance.new("Animation")
-            anim.AnimationId = "rbxassetid://3333499508"
-            local t = h:LoadAnimation(anim)
-            t:Play()
-            t:AdjustSpeed(5)
-        end
+        GiveEmoteTool()
+        Rayfield:Notify({Title = "Inventaire", Content = "Tool ajouté à ton sac !", Duration = 3})
     end
 })
 
+FunTab:CreateToggle({
+   Name = "Activer Spin-Bot",
+   CurrentValue = false,
+   Callback = function(v) spinning = v end,
+})
+
 -- ══════════════════════════════════════
--- LOGIQUE AIMBOT
+-- BOUCLES DE MISE À JOUR
 -- ══════════════════════════════════════
 RunService.RenderStepped:Connect(function()
-    if AimbotEnabled then
+    if AimbotActive then
         local target = nil
-        local dist = math.huge
+        local dist = AimDistance
         for _, p in pairs(Players:GetPlayers()) do
             if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("Head") then
-                local pos, vis = Camera:WorldToViewportPoint(p.Character.Head.Position)
-                if vis then
-                    local m = (Vector2.new(pos.X, pos.Y) - UIS:GetMouseLocation()).Magnitude
-                    if m < dist then dist = m; target = p.Character.Head end
+                local d = (LocalPlayer.Character.HumanoidRootPart.Position - p.Character.HumanoidRootPart.Position).Magnitude
+                if d < dist then
+                    local pos, vis = Camera:WorldToViewportPoint(p.Character.Head.Position)
+                    if vis then dist = d; target = p.Character.Head end
                 end
             end
         end
         if target then Camera.CFrame = CFrame.new(Camera.CFrame.Position, target.Position) end
     end
+    
+    if spinning and getRoot() then
+        getRoot().CFrame = getRoot().CFrame * CFrame.Angles(0, math.rad(spinSpeed), 0)
+    end
 end)
 
 Rayfield:LoadConfiguration()
-Rayfield:Notify({Title = "Luluclc3 V7 Loaded", Content = "ESP et Fly synchronisés, mon cher !", Duration = 5})
+Rayfield:Notify({Title = "Luluclc3 Master V9", Content = "Prêt pour l'action !", Duration = 5})
