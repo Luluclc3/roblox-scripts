@@ -1,6 +1,6 @@
 -- ══════════════════════════════════════════════════════
---           LULUCLC3 MENU v13.0 - MASTER SUPREME 👑
---                L'ÉDITION ULTIME & COMPLÈTE
+--           LULUCLC3 MENU v15.0 - EXCELLENCE 👑
+--                SELECTIVE AIM & PERFECT FLY
 -- ══════════════════════════════════════════════════════
 
 local Players = game:GetService("Players")
@@ -9,24 +9,25 @@ local UIS = game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
--- ── Chargement de l'Interface Rayfield ──
+-- ── Chargement Rayfield ──
 local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
 
 local Window = Rayfield:CreateWindow({
-   Name = "Luluclc3 Master V13 👑",
-   LoadingTitle = "Chargement de l'Arsenal Suprême...",
-   LoadingSubtitle = "by Luluclc3 - Version Finale",
+   Name = "Luluclc3 Master V15 👑",
+   LoadingTitle = "Optimisation du Moteur...",
+   LoadingSubtitle = "by Luluclc3 - L'Excellence",
    Theme = "DarkBlue",
-   ConfigurationSaving = { Enabled = true, Folder = "Luluclc3_V13" }
+   ConfigurationSaving = { Enabled = true, Folder = "Luluclc3_V15" }
 })
 
 -- ══════════════════════════════════════
--- VARIABLES ET ÉTATS (CORE)
+-- VARIABLES GLOBALES
 -- ══════════════════════════════════════
-local flyActive = false
-local flySpeed = 2
 local AimbotActive = false
 local AimDistance = 999999
+local TargetPlayer = "Tous"
+local flyActive = false
+local flySpeed = 2
 local espActive = false
 local hitboxSize = 2
 local spinning = false
@@ -36,27 +37,51 @@ local function getRoot() return LocalPlayer.Character and LocalPlayer.Character:
 local function getHum() return LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") end
 
 -- ══════════════════════════════════════
--- ONGLET 1 : COMBAT (AIMBOT & HITBOX)
+-- ONGLET 1 : COMBAT (AIMBOT SÉLECTIF)
 -- ══════════════════════════════════════
 local CombatTab = Window:CreateTab("⚔️ Combat Elite", 4483362458)
 
-CombatTab:CreateSection("🎯 Aimbot de Précision")
+CombatTab:CreateSection("🎯 Aimbot Avancé")
 CombatTab:CreateToggle({
    Name = "Activer l'Aimbot",
    CurrentValue = false,
    Callback = function(v) AimbotActive = v end,
 })
 
+local PlayerList = {"Tous"}
+for _, p in pairs(Players:GetPlayers()) do
+    if p ~= LocalPlayer then table.insert(PlayerList, p.Name) end
+end
+
+local TargetDropdown = CombatTab:CreateDropdown({
+   Name = "Choisir la Cible",
+   Options = PlayerList,
+   CurrentOption = {"Tous"},
+   MultipleOptions = false,
+   Callback = function(v) TargetPlayer = v[1] end,
+})
+
+CombatTab:CreateButton({
+   Name = "Rafraîchir Liste Joueurs 🔄",
+   Callback = function()
+       local NewList = {"Tous"}
+       for _, p in pairs(Players:GetPlayers()) do
+           if p ~= LocalPlayer then table.insert(NewList, p.Name) end
+       end
+       TargetDropdown:Set(NewList)
+   end,
+})
+
 CombatTab:CreateInput({
-   Name = "Distance de Verrouillage (Nombre)",
-   PlaceholderText = "Ex: 999999",
+   Name = "Distance Max (Infinie)",
+   PlaceholderText = "999999",
    Callback = function(txt) AimDistance = tonumber(txt) or 999999 end,
 })
 
 CombatTab:CreateSection("🛡️ Hitbox Expander")
 CombatTab:CreateSlider({
-   Name = "Taille Hitbox (Cibles)",
-   Range = {2, 100}, Increment = 1, Suffix = " studs", CurrentValue = 2,
+   Name = "Taille Hitbox",
+   Range = {2, 100}, Increment = 1, CurrentValue = 2,
    Callback = function(v)
        hitboxSize = v
        task.spawn(function()
@@ -66,7 +91,6 @@ CombatTab:CreateSlider({
                    if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
                        p.Character.HumanoidRootPart.Size = Vector3.new(v, v, v)
                        p.Character.HumanoidRootPart.Transparency = 0.7
-                       p.Character.HumanoidRootPart.CanCollide = false
                    end
                end
            end
@@ -82,21 +106,19 @@ CombatTab:CreateButton({
            if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
                p.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1)
                p.Character.HumanoidRootPart.Transparency = 0
-               p.Character.HumanoidRootPart.CanCollide = true
            end
        end
-       Rayfield:Notify({Title = "Système", Content = "Hitboxes réinitialisées avec succès.", Duration = 3})
    end,
 })
 
 -- ══════════════════════════════════════
--- ONGLET 2 : MOUVEMENT (FLY C-FRAME PRO)
+-- ONGLET 2 : FLY (LE MEILLEUR POSSIBLE)
 -- ══════════════════════════════════════
-local MoveTab = Window:CreateTab("✈️ Fly & Mouvement", 4483362458)
+local MoveTab = Window:CreateTab("✈️ Fly Parfait", 4483362458)
 
-MoveTab:CreateSection("🚀 Vol Mobile & PC")
+MoveTab:CreateSection("🚀 Vol Directionnel (Mobile & PC)")
 MoveTab:CreateToggle({
-   Name = "Activer le Fly (Optimisé)",
+   Name = "Activer le Fly Pro",
    CurrentValue = false,
    Callback = function(v)
        flyActive = v
@@ -108,19 +130,24 @@ MoveTab:CreateToggle({
                    local hum = getHum()
                    if root and hum then
                        hum.PlatformStand = true
+                       
                        local moveDir = Vector3.zero
                        
-                       -- Support Joystick Mobile & Clavier PC
+                       -- Logique Mobile/PC Unifiée
                        if hum.MoveDirection.Magnitude > 0 then
+                           -- Utilise la direction du joystick relative à la vue caméra
                            moveDir = hum.MoveDirection
                        end
                        
-                       -- Contrôles de Hauteur
-                       if UIS:IsKeyDown(Enum.KeyCode.Space) then moveDir += Vector3.new(0,1,0) end
-                       if UIS:IsKeyDown(Enum.KeyCode.LeftShift) then moveDir -= Vector3.new(0,1,0) end
+                       -- Hauteur manuelle (PC)
+                       if UIS:IsKeyDown(Enum.KeyCode.Space) then moveDir += Vector3.new(0, 1, 0) end
+                       if UIS:IsKeyDown(Enum.KeyCode.LeftShift) then moveDir -= Vector3.new(0, 1, 0) end
                        
-                       -- Mouvement CFrame Fluide
-                       root.CFrame = CFrame.new(root.Position, root.Position + Camera.CFrame.LookVector) * CFrame.new(moveDir * flySpeed)
+                       -- Déplacement par CFrame (Zéro friction, zéro inversion)
+                       root.CFrame = CFrame.new(root.Position + (moveDir * flySpeed)) * CFrame.Angles(math.rad(Camera.CFrame.LookVector.Y * 90), 0, 0)
+                       -- On maintient l'angle de vue pour plus de style
+                       root.CFrame = CFrame.new(root.Position, root.Position + Camera.CFrame.LookVector)
+                       
                        root.Velocity = Vector3.zero
                    end
                end
@@ -131,18 +158,18 @@ MoveTab:CreateToggle({
 })
 
 MoveTab:CreateSlider({
-   Name = "Vitesse du Vol",
+   Name = "Vitesse de Croisière",
    Range = {1, 15}, Increment = 0.5, CurrentValue = 2,
    Callback = function(v) flySpeed = v end,
 })
 
 -- ══════════════════════════════════════
--- ONGLET 3 : VISUELS (ESP AUTO-REFRESH)
+-- ONGLET 3 : VISUELS (ESP)
 -- ══════════════════════════════════════
-local VisualTab = Window:CreateTab("👁️ Visuals ESP", 4483362458)
+local VisualTab = Window:CreateTab("👁️ Visuals", 4483362458)
 
 VisualTab:CreateToggle({
-   Name = "ESP Auto-Refresh (Highlights)",
+   Name = "ESP Auto-Refresh",
    CurrentValue = false,
    Callback = function(v)
        espActive = v
@@ -165,11 +192,10 @@ VisualTab:CreateToggle({
 })
 
 -- ══════════════════════════════════════
--- ONGLET 4 : FUN & TOOL GENERATOR
+-- ONGLET 4 : FUN (TOOL EMOTE)
 -- ══════════════════════════════════════
 local FunTab = Window:CreateTab("🎭 Fun & Tools", 4483362458)
 
-FunTab:CreateSection("🎁 Objets Spéciaux")
 FunTab:CreateButton({
     Name = "Obtenir Tool : Branler 💦",
     Callback = function()
@@ -177,67 +203,59 @@ FunTab:CreateButton({
         tool.Name = "Branler 💦"
         tool.RequiresHandle = false
         tool.Parent = LocalPlayer.Backpack
-        
-        local animTrack = nil
+        local track = nil
         tool.Equipped:Connect(function()
             local h = getHum()
             if h then
                 local a = Instance.new("Animation")
                 a.AnimationId = "rbxassetid://3333499508"
-                animTrack = h:LoadAnimation(a)
-                animTrack:Play()
-                animTrack:AdjustSpeed(5)
+                track = h:LoadAnimation(a)
+                track:Play()
+                track:AdjustSpeed(5)
             end
         end)
-        tool.Unequipped:Connect(function() if animTrack then animTrack:Stop() end end)
-        Rayfield:Notify({Title = "Inventaire", Content = "Tool ajouté !", Duration = 2})
+        tool.Unequipped:Connect(function() if track then track:Stop() end end)
+        Rayfield:Notify({Title = "Inventaire", Content = "L'objet est prêt, mon cher !"})
     end
 })
 
-FunTab:CreateSection("🌪️ Troll")
 FunTab:CreateToggle({
-   Name = "Activer le Spin-Bot",
+   Name = "Spin-Bot",
    CurrentValue = false,
    Callback = function(v) spinning = v end,
 })
 
-FunTab:CreateSlider({
-   Name = "Vitesse du Spin",
-   Range = {10, 500}, Increment = 10, CurrentValue = 50,
-   Callback = function(v) spinSpeed = v end,
-})
-
 -- ══════════════════════════════════════
--- LOGIQUE GLOBALE (RUNSERVICE)
+-- LOGIQUE FINALE (RUNSERVICE)
 -- ══════════════════════════════════════
 RunService.RenderStepped:Connect(function()
-    -- Aimbot
     if AimbotActive then
-        local target = nil
+        local targetHead = nil
         local dist = AimDistance
+        
         for _, p in pairs(Players:GetPlayers()) do
             if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("Head") then
-                local d = (LocalPlayer.Character.HumanoidRootPart.Position - p.Character.HumanoidRootPart.Position).Magnitude
-                if d < dist then
-                    local pos, vis = Camera:WorldToViewportPoint(p.Character.Head.Position)
-                    if vis then dist = d; target = p.Character.Head end
+                -- Filtre par joueur sélectionné
+                if TargetPlayer == "Tous" or TargetPlayer == p.Name then
+                    local d = (LocalPlayer.Character.HumanoidRootPart.Position - p.Character.HumanoidRootPart.Position).Magnitude
+                    if d < dist then
+                        local pos, vis = Camera:WorldToViewportPoint(p.Character.Head.Position)
+                        if vis then
+                            dist = d
+                            targetHead = p.Character.Head
+                        end
+                    end
                 end
             end
         end
-        if target then Camera.CFrame = CFrame.new(Camera.CFrame.Position, target.Position) end
+        if targetHead then
+            Camera.CFrame = CFrame.new(Camera.CFrame.Position, targetHead.Position)
+        end
     end
     
-    -- Spin
     if spinning and getRoot() then
         getRoot().CFrame = getRoot().CFrame * CFrame.Angles(0, math.rad(spinSpeed), 0)
     end
 end)
 
--- ══════════════════════════════════════
--- PARAMÈTRES
--- ══════════════════════════════════════
-local SettingsTab = Window:CreateTab("⚙️ Paramètres", 4483362458)
-SettingsTab:CreateButton({Name = "Détruire le Menu", Callback = function() Rayfield:Destroy() end})
-
-Rayfield:LoadConfiguration()
-Rayfield:Notify({Title = "Luluclc3 Master V13", Content = "Système opérationnel, mon cher !", Duration = 5})
+Rayfield:Notify({Title = "Luluclc3 Master V15", Content = "Système d'Excellence activé !", Duration = 5})
