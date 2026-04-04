@@ -1,6 +1,6 @@
 -- ══════════════════════════════════════════════════════
---           LULUCLC3 MENU v24.0 - OMNISCIENT 👑
---        FLY + ESP TRACERS + TROLL + SERVER SCANNER
+--           LULUCLC3 MENU v25.0 - APEX PERFORMANCE 👑
+--        ESP ROUGE, CUSTOM SPEEDS & VULN LIST
 -- ══════════════════════════════════════════════════════
 
 local Players = game:GetService("Players")
@@ -9,22 +9,22 @@ local UIS = game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
--- ── Chargement Rayfield ──
+-- ── Chargement Rayfield (Optimisé) ──
 local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
 
 local Window = Rayfield:CreateWindow({
-   Name = "Luluclc3 Master V24 👑",
-   LoadingTitle = "Chargement de l'Arsenal Omniscient...",
-   LoadingSubtitle = "by Luluclc3 - L'Excellence Gentleman",
+   Name = "Luluclc3 Master V25 👑",
+   LoadingTitle = "Protocoles Apex en cours...",
+   LoadingSubtitle = "Performance & Élégance",
    Theme = "DarkBlue",
-   ConfigurationSaving = { Enabled = true, Folder = "Luluclc3_V24" }
+   ConfigurationSaving = { Enabled = true, Folder = "Luluclc3_V25" }
 })
 
 -- ══════════════════════════════════════
--- VARIABLES GLOBALES
+-- VARIABLES GLOBALES (Performances)
 -- ══════════════════════════════════════
-local flyActive, noclipActive, flySpeed = false, false, 3
-local AimbotActive, TargetPlayer = false, "Tous"
+local flyActive, noclipActive = false, false
+local flySpeed, walkSpeed, jumpPower = 3, 16, 50
 local espTracers, espBoxes, espNames = false, false, false
 local spinning, spinSpeed = false, 50
 local jerkActive = false
@@ -33,88 +33,117 @@ local function getRoot() return LocalPlayer.Character and LocalPlayer.Character:
 local function getHum() return LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") end
 
 -- ══════════════════════════════════════
--- ONGLET 1 : 🔍 SERVER SENTINEL (FAILLES)
+-- ONGLET 1 : 🔍 SERVER SENTINEL (LISTE DES FAILLES)
 -- ══════════════════════════════════════
-local ScanTab = Window:CreateTab("🔍 Server Failles", 4483362458)
+local ScanTab = Window:CreateTab("🔍 Failles & Serveur", 4483362458)
 
-ScanTab:CreateSection("🛡️ Analyseur de Remotes")
-local ScanLabel = ScanTab:CreateLabel("Prêt pour l'analyse du serveur...")
+ScanTab:CreateSection("🛡️ Scanner de Vulnérabilités")
+
+local VulnParagraph = ScanTab:CreateParagraph({Title = "Failles Détectées :", Content = "Aucun scan effectué."})
 
 ScanTab:CreateButton({
-   Name = "Scanner les Vulnérabilités 🚀",
+   Name = "Lancer l'Analyse du Serveur 🚀",
    Callback = function()
-       ScanLabel:Set("Analyse des failles en cours...")
-       task.wait(1)
-       local remotes = 0
-       local found = {}
-       for _, v in pairs(game:GetDescendants()) do
-           if v:IsA("RemoteEvent") or v:IsA("RemoteFunction") then
-               remotes = remotes + 1
-               local n = v.Name:lower()
-               if n:find("admin") or n:find("give") or n:find("money") or n:find("cash") or n:find("ban") or n:find("kill") then
-                   table.insert(found, v.Name)
+       VulnParagraph:Set({Title = "Analyse...", Content = "Recherche des remotes en cours..."})
+       task.wait(0.5) -- Petite pause pour ne pas figer le jeu
+       
+       local foundRemotes = {}
+       -- Scan ciblé pour plus de performances (ReplicatedStorage et workspace sont les plus courants)
+       local targets = {game:GetService("ReplicatedStorage"), workspace}
+       
+       for _, directory in pairs(targets) do
+           for _, v in pairs(directory:GetDescendants()) do
+               if v:IsA("RemoteEvent") or v:IsA("RemoteFunction") then
+                   local n = v.Name:lower()
+                   -- Mots-clés de failles (Backdoors/Admin)
+                   if n:find("admin") or n:find("give") or n:find("money") or n:find("cash") or n:find("ban") or n:find("kill") or n:find("kick") then
+                       table.insert(foundRemotes, "⚠️ " .. v.Name .. " (" .. v.ClassName .. ")")
+                   end
                end
            end
        end
-       ScanLabel:Set(remotes .. " Remotes détectés.")
-       if #found > 0 then
-           Rayfield:Notify({Title = "FAILLE DÉTECTÉE", Content = "Remotes suspects : " .. table.concat(found, ", "), Duration = 6})
+       
+       if #foundRemotes > 0 then
+           VulnParagraph:Set({Title = "Failles Détectées (" .. #foundRemotes .. ") :", Content = table.concat(foundRemotes, "\n")})
+           Rayfield:Notify({Title = "Succès", Content = "Failles listées dans le menu !", Duration = 3})
        else
-           Rayfield:Notify({Title = "Analyse", Content = "Aucune faille critique nommée n'a été trouvée.", Duration = 3})
+           VulnParagraph:Set({Title = "Résultat :", Content = "Aucune faille critique apparente trouvée dans ReplicatedStorage/Workspace."})
        end
    end,
 })
 
 -- ══════════════════════════════════════
--- ONGLET 2 : 👁️ VISUALS (ESP & TRACERS)
+-- ONGLET 2 : 👁️ VISUALS (ESP ROUGE & VIDE)
 -- ══════════════════════════════════════
-local VisualTab = Window:CreateTab("👁️ Visuals & ESP", 4483362458)
+local VisualTab = Window:CreateTab("👁️ Visuals ESP", 4483362458)
 
+VisualTab:CreateToggle({Name = "Box (Cadres Rouges Vides)", CurrentValue = false, Callback = function(v) espBoxes = v end})
 VisualTab:CreateToggle({Name = "Tracers (Lignes)", CurrentValue = false, Callback = function(v) espTracers = v end})
-VisualTab:CreateToggle({Name = "Box (Cadres)", CurrentValue = false, Callback = function(v) espBoxes = v end})
-VisualTab:CreateToggle({Name = "Noms", CurrentValue = false, Callback = function(v) espNames = v end})
+VisualTab:CreateToggle({Name = "Noms des Joueurs", CurrentValue = false, Callback = function(v) espNames = v end})
 
+-- Moteur ESP Haute Performance (Drawing API)
 local function CreateESP(p)
     local tracer = Drawing.new("Line")
     local box = Drawing.new("Square")
     local name = Drawing.new("Text")
-    RunService.RenderStepped:Connect(function()
-        if p.Character and p.Character:FindFirstChild("HumanoidRootPart") and p ~= LocalPlayer then
+    
+    -- Configuration stricte du cadre selon vos ordres
+    box.Color = Color3.fromRGB(255, 0, 0) -- Rouge pur
+    box.Filled = false -- Pas de remplissage
+    box.Thickness = 1.5
+
+    local connection
+    connection = RunService.RenderStepped:Connect(function()
+        if p and p.Parent and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and p ~= LocalPlayer then
             local rootPos, onScreen = Camera:WorldToViewportPoint(p.Character.HumanoidRootPart.Position)
             if onScreen then
+                -- BOX ROUGE
+                if espBoxes then
+                    box.Visible = true
+                    box.Size = Vector2.new(2000 / rootPos.Z, 3500 / rootPos.Z)
+                    box.Position = Vector2.new(rootPos.X - box.Size.X / 2, rootPos.Y - box.Size.Y / 2)
+                else box.Visible = false end
+                
+                -- TRACERS
                 if espTracers then
                     tracer.Visible = true
                     tracer.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
                     tracer.To = Vector2.new(rootPos.X, rootPos.Y)
                     tracer.Color = Color3.fromRGB(255, 0, 0)
                 else tracer.Visible = false end
-                if espBoxes then
-                    box.Visible = true
-                    box.Size = Vector2.new(2000 / rootPos.Z, 3500 / rootPos.Z)
-                    box.Position = Vector2.new(rootPos.X - box.Size.X / 2, rootPos.Y - box.Size.Y / 2)
-                    box.Color = Color3.fromRGB(255, 255, 255)
-                else box.Visible = false end
+                
+                -- NOMS
                 if espNames then
                     name.Visible = true
                     name.Text = p.Name
                     name.Position = Vector2.new(rootPos.X, rootPos.Y - (box.Size.Y / 2) - 15)
                     name.Center = true; name.Outline = true; name.Color = Color3.new(1,1,1)
                 else name.Visible = false end
-            else tracer.Visible = false; box.Visible = false; name.Visible = false end
-        else tracer.Visible = false; box.Visible = false; name.Visible = false end
-        if not p.Parent then tracer:Remove(); box:Remove(); name:Remove() end
+            else
+                tracer.Visible = false; box.Visible = false; name.Visible = false
+            end
+        else
+            tracer.Visible = false; box.Visible = false; name.Visible = false
+            -- Nettoyage de la mémoire si le joueur quitte
+            if not p or not p.Parent then
+                tracer:Remove(); box:Remove(); name:Remove()
+                if connection then connection:Disconnect() end
+            end
+        end
     end)
 end
+
 for _, p in pairs(Players:GetPlayers()) do CreateESP(p) end
 Players.PlayerAdded:Connect(CreateESP)
 
 -- ══════════════════════════════════════
--- ONGLET 3 : ✈️ MOUVEMENT (FLY MOBILE)
+-- ONGLET 3 : 🏃 MODIFICATEURS & FLY
 -- ══════════════════════════════════════
-local MoveTab = Window:CreateTab("✈️ Fly & Noclip", 4483362458)
+local MoveTab = Window:CreateTab("🏃 Mouvement & Vitesses", 4483362458)
 
+MoveTab:CreateSection("✈️ Vol Ultime")
 MoveTab:CreateToggle({
-   Name = "Fly + Noclip (Perfect Mobile)",
+   Name = "Fly + Noclip",
    CurrentValue = false,
    Callback = function(v)
        flyActive, noclipActive = v, v
@@ -133,22 +162,52 @@ MoveTab:CreateToggle({
                        bv.Velocity = (dir.Magnitude > 0) and ((Camera.CFrame.LookVector * (dir.Z * -1) + Camera.CFrame.RightVector * dir.X) * (flySpeed * 50)) or Vector3.zero
                    end
                end
-               bv:Destroy(); bg:Destroy()
+               if bv then bv:Destroy() end
+               if bg then bg:Destroy() end
                if getHum() then getHum().PlatformStand = false end
            end)
        end
    end,
 })
 
-MoveTab:CreateSlider({Name = "Vitesse", Range = {1, 50}, Increment = 1, CurrentValue = 3, Callback = function(v) flySpeed = v end})
+MoveTab:CreateSlider({Name = "Vitesse du Vol", Range = {1, 100}, Increment = 1, CurrentValue = 3, Callback = function(v) flySpeed = v end})
+
+MoveTab:CreateSection("⚡ Personnalisation Vitesse Physique")
+MoveTab:CreateSlider({
+   Name = "WalkSpeed (Vitesse de marche)",
+   Range = {16, 200}, Increment = 1, CurrentValue = 16,
+   Callback = function(v)
+       walkSpeed = v
+       if getHum() then getHum().WalkSpeed = walkSpeed end
+   end,
+})
+
+MoveTab:CreateSlider({
+   Name = "JumpPower (Hauteur de saut)",
+   Range = {50, 300}, Increment = 1, CurrentValue = 50,
+   Callback = function(v)
+       jumpPower = v
+       if getHum() then getHum().JumpPower = jumpPower end
+   end,
+})
+
+-- Boucle pour forcer le WalkSpeed/JumpPower (certains jeux le remettent à zéro)
+task.spawn(function()
+    while task.wait(0.5) do
+        if getHum() then
+            if walkSpeed > 16 then getHum().WalkSpeed = walkSpeed end
+            if jumpPower > 50 then getHum().JumpPower = jumpPower end
+        end
+    end
+end)
 
 -- ══════════════════════════════════════
--- ONGLET 4 : 🤡 TROLL (CHAOS)
+-- ONGLET 4 : 🤡 TROLL & CHAOS
 -- ══════════════════════════════════════
 local TrollTab = Window:CreateTab("🤡 Troll", 4483362458)
 
 TrollTab:CreateToggle({
-   Name = "Activer Jerk 💦",
+   Name = "Forcer Jerk 💦",
    CurrentValue = false,
    Callback = function(v)
        jerkActive = v
@@ -169,24 +228,23 @@ TrollTab:CreateToggle({
    end,
 })
 
-TrollTab:CreateToggle({Name = "Spin-Bot (Tornado)", CurrentValue = false, Callback = function(v) spinning = v end})
-TrollTab:CreateSlider({Name = "Vitesse Spin", Range = {10, 300}, Increment = 10, CurrentValue = 50, Callback = function(v) spinSpeed = v end})
+TrollTab:CreateToggle({Name = "Tornado Spin", CurrentValue = false, Callback = function(v) spinning = v end})
+TrollTab:CreateSlider({Name = "Vitesse du Spin", Range = {10, 500}, Increment = 10, CurrentValue = 50, Callback = function(v) spinSpeed = v end})
 
 -- ══════════════════════════════════════
--- LOGIQUE FINALE (BOUCLES)
+-- OPTIMISATION GLOBALE (Stepped)
 -- ══════════════════════════════════════
 RunService.Stepped:Connect(function()
+    -- Noclip optimisé
     if noclipActive and LocalPlayer.Character then
         for _, part in pairs(LocalPlayer.Character:GetDescendants()) do
             if part:IsA("BasePart") then part.CanCollide = false end
         end
     end
-end)
-
-RunService.RenderStepped:Connect(function()
+    -- Spin optimisé
     if spinning and getRoot() then 
         getRoot().CFrame = getRoot().CFrame * CFrame.Angles(0, math.rad(spinSpeed), 0) 
     end
 end)
 
-Rayfield:Notify({Title = "Luluclc3 Master V24", Content = "Arsenal complet prêt, mon cher !", Duration = 5})
+Rayfield:Notify({Title = "Luluclc3 V25", Content = "Systèmes calibrés. Prêt à l'emploi.", Duration = 5})
