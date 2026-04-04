@@ -1,56 +1,67 @@
 -- ══════════════════════════════════════════════════════
---           LULUCLC3 MENU v39.0 - ETERNAL MAJESTY 👑
---      FIX TOTAL + OUVERTURE FORCÉE + REFRESH ESP
+--           LULUCLC3 MENU v40.0 - REDLINE MOBILE 👑
+--      ULTRA-RAPIDE | OUVERTURE FORCÉE | FULL OPTIONS
 -- ══════════════════════════════════════════════════════
 
--- [1] PROTOCOLE DE SÉCURITÉ INITIAL
-repeat task.wait() until game:IsLoaded()
-
+-- [1] SÉCURITÉ ANTI-CRASH MOBILE
+if not game:IsLoaded() then game.Loaded:Wait() end
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UIS = game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer
 
--- [2] CHARGEMENT DE L'INTERFACE (AVEC PROTECTION)
-local Rayfield
-local success, err = pcall(function()
-    return loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
-end)
+-- [2] CHARGEMENT DE L'INTERFACE LÉGÈRE (SPÉCIAL MOBILE)
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
+local Window = Library.CreateLib("Luluclc3 Prestige V40 💎", "Midnight")
 
-if not success or not Rayfield then
-    warn("ERREUR DE CHARGEMENT RAYFIELD : ", err)
-    -- Fallback : Message de secours si l'UI ne charge pas
-    print("Tentative de reconnexion au serveur d'interface...")
-    return
-end
-
-local Window = Rayfield:CreateWindow({
-   Name = "Luluclc3 Eternal V39 👑",
-   LoadingTitle = "Restauration Complète...",
-   LoadingSubtitle = "Stabilité Royale Activée",
-   Theme = "DarkBlue",
-   ConfigurationSaving = { Enabled = false }
-})
-
--- [3] ÉTAT DES SYSTÈMES (TOUT RÉGLABLE)
+-- [3] VARIABLES DE CONTRÔLE
 local State = {
     speed = 16, jump = 50,
     esp = false, espNames = false, espTracers = false,
-    espColor = Color3.fromRGB(255, 255, 255),
+    espColor = Color3.fromRGB(255, 0, 0),
     aura = false, auraDist = 20,
-    noclip = false, infJump = false,
-    spin = false, spinSpeed = 50
+    noclip = false, infJump = false
 }
 local targetPlayer = ""
 
--- [4] FONCTIONS DE LUXE (ESP REFRESH CONSTANT)
-local function CreatePrestigeESP(p)
+-- [4] ONGLETS DE L'ARSENAL
+local Main = Window:NewTab("🏃 Mouvement")
+local MainSection = Main:NewSection("Réglages Physiques")
+
+MainSection:NewSlider("Vitesse (WalkSpeed)", "Règle ta vitesse", 500, 16, function(s) State.speed = s end)
+MainSection:NewSlider("Saut (JumpPower)", "Règle ton saut", 600, 50, function(s) State.jump = s end)
+MainSection:NewToggle("Noclip (Murs)", "Passe à travers tout", function(v) State.noclip = v end)
+MainSection:NewToggle("Saut Infini", "Saute dans le vide", function(v) State.infJump = v end)
+
+local Visuals = Window:NewTab("👁️ Visuals")
+local VisualsSection = Visuals:NewSection("ESP & Tracking")
+
+VisualsSection:NewToggle("Master ESP", "Voir les joueurs", function(v) State.esp = v end)
+VisualsSection:NewToggle("Afficher les Noms", "Identifie tes cibles", function(v) State.espNames = v end)
+VisualsSection:NewToggle("Lignes (Tracers)", "Traceur vers l'ennemi", function(v) State.espTracers = v end)
+VisualsSection:NewColorPicker("Couleur ESP", "Choisis ta couleur", Color3.fromRGB(255,0,0), function(c) State.espColor = c end)
+
+local Combat = Window:NewTab("⚔️ Combat")
+local CombatSection = Combat:NewSection("Attaque Automatique")
+
+CombatSection:NewToggle("Kill Aura", "Frappe tout ce qui bouge", function(v) State.aura = v end)
+CombatSection:NewSlider("Portée d'Aura", "Distance de frappe", 50, 5, function(s) State.auraDist = s end)
+
+local System = Window:NewTab("🛠️ Système")
+local SystemSection = System:NewSection("Administration")
+
+SystemSection:NewTextBox("Pseudo Cible", "Entre le nom ici", function(t) targetPlayer = t end)
+SystemSection:NewButton("Se Téléporter (TP)", "Rejoins ta cible", function()
+    local p = Players:FindFirstChild(targetPlayer)
+    if p and p.Character then LocalPlayer.Character.HumanoidRootPart.CFrame = p.Character.HumanoidRootPart.CFrame end
+end)
+SystemSection:NewButton("Détruire le Menu", "Ferme proprement le script", function() Library:Destroy() end)
+
+-- [5] LOGIQUE DE L'ESP (HAUTE FRÉQUENCE)
+local function CreateESP(p)
     local box = Drawing.new("Square")
     local line = Drawing.new("Line")
     local text = Drawing.new("Text")
-    
-    box.Visible = false; box.Filled = false
-    line.Visible = false; text.Visible = false
     text.Center = true; text.Outline = true; text.Size = 14
 
     RunService.RenderStepped:Connect(function()
@@ -60,39 +71,63 @@ local function CreatePrestigeESP(p)
             local pos, onScreen = workspace.CurrentCamera:WorldToViewportPoint(root.Position)
 
             if onScreen and State.esp and hum and hum.Health > 0 then
-                -- Refresh Box
-                box.Visible = true
-                box.Color = State.espColor
+                box.Visible = true; box.Color = State.espColor; box.Thickness = 1
                 box.Size = Vector2.new(2000/pos.Z, 3500/pos.Z)
                 box.Position = Vector2.new(pos.X - box.Size.X/2, pos.Y - box.Size.Y/2)
                 
-                -- Refresh Tracer
                 if State.espTracers then
-                    line.Visible = true
-                    line.Color = State.espColor
+                    line.Visible = true; line.Color = State.espColor
                     line.From = Vector2.new(workspace.CurrentCamera.ViewportSize.X/2, workspace.CurrentCamera.ViewportSize.Y)
                     line.To = Vector2.new(pos.X, pos.Y)
                 else line.Visible = false end
 
-                -- Refresh Name
                 if State.espNames then
-                    text.Visible = true
-                    text.Color = State.espColor
-                    text.Text = p.Name .. " [" .. math.floor(pos.Z) .. "m]"
+                    text.Visible = true; text.Color = State.espColor; text.Text = p.Name
                     text.Position = Vector2.new(pos.X, pos.Y - (box.Size.Y/2) - 15)
                 else text.Visible = false end
-            else
-                box.Visible = false; line.Visible = false; text.Visible = false
-            end
-        else
-            box.Visible = false; line.Visible = false; text.Visible = false
-        end
+            else box.Visible = false; line.Visible = false; text.Visible = false end
+        else box.Visible = false; line.Visible = false; text.Visible = false end
         if not p.Parent then box:Remove(); line:Remove(); text:Remove() end
     end)
 end
 
--- [5] ONGLETS ET RÉGLAGES
-local TabVisuals = Window:CreateTab("👁️ Visuals", 4483362458)
+-- [6] LANCEMENT DES BOUCLES DE CONTRÔLE
+for _, p in pairs(Players:GetPlayers()) do task.spawn(function() CreateESP(p) end) end
+Players.PlayerAdded:Connect(function(p) task.spawn(function() CreateESP(p) end) end)
+
+task.spawn(function()
+    while task.wait(0.1) do
+        pcall(function()
+            local char = LocalPlayer.Character
+            if char and char:FindFirstChildOfClass("Humanoid") then
+                char:FindFirstChildOfClass("Humanoid").WalkSpeed = State.speed
+                char:FindFirstChildOfClass("Humanoid").JumpPower = State.jump
+            end
+            if State.aura then
+                for _, p in pairs(Players:GetPlayers()) do
+                    if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                        if (char.HumanoidRootPart.Position - p.Character.HumanoidRootPart.Position).Magnitude < State.auraDist then
+                            local tool = char:FindFirstChildOfClass("Tool")
+                            if tool then tool:Activate() end
+                        end
+                    end
+                end
+            end
+        end)
+    end
+end)
+
+RunService.Stepped:Connect(function()
+    if State.noclip and LocalPlayer.Character then
+        for _, v in pairs(LocalPlayer.Character:GetDescendants()) do if v:IsA("BasePart") then v.CanCollide = false end end
+    end
+end)
+
+UIS.JumpRequest:Connect(function()
+    if State.infJump and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
+        LocalPlayer.Character:FindFirstChildOfClass("Humanoid"):ChangeState("Jumping")
+    end
+end)
 TabVisuals:CreateToggle({Name = "Activer ESP (Master)", CurrentValue = false, Callback = function(v) State.esp = v end})
 TabVisuals:CreateToggle({Name = "Lignes (Tracers)", CurrentValue = false, Callback = function(v) State.espTracers = v end})
 TabVisuals:CreateToggle({Name = "Afficher les Noms", CurrentValue = false, Callback = function(v) State.espNames = v end})
