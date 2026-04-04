@@ -1,6 +1,6 @@
 -- ══════════════════════════════════════════════════════
---           LULUCLC3 MENU v15.0 - EXCELLENCE 👑
---                SELECTIVE AIM & PERFECT FLY
+--           LULUCLC3 MENU v17.0 - INFINITY EDITION 👑
+--                FLY+NOCLIP & JERK EMOTE FIX
 -- ══════════════════════════════════════════════════════
 
 local Players = game:GetService("Players")
@@ -13,35 +13,34 @@ local Camera = workspace.CurrentCamera
 local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
 
 local Window = Rayfield:CreateWindow({
-   Name = "Luluclc3 Master V15 👑",
-   LoadingTitle = "Optimisation du Moteur...",
-   LoadingSubtitle = "by Luluclc3 - L'Excellence",
+   Name = "Luluclc3 Master V17 👑",
+   LoadingTitle = "Protocole Excellence en cours...",
+   LoadingSubtitle = "Version 17.0 - Infinite Style",
    Theme = "DarkBlue",
-   ConfigurationSaving = { Enabled = true, Folder = "Luluclc3_V15" }
+   ConfigurationSaving = { Enabled = true, Folder = "Luluclc3_V17" }
 })
 
 -- ══════════════════════════════════════
--- VARIABLES GLOBALES
+-- VARIABLES ET ÉTATS
 -- ══════════════════════════════════════
-local AimbotActive = false
-local AimDistance = 999999
-local TargetPlayer = "Tous"
 local flyActive = false
+local noclipActive = false
 local flySpeed = 2
+local AimbotActive = false
+local TargetPlayer = "Tous"
+local AimDistance = 999999
 local espActive = false
 local hitboxSize = 2
-local spinning = false
-local spinSpeed = 50
 
 local function getRoot() return LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") end
 local function getHum() return LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") end
 
 -- ══════════════════════════════════════
--- ONGLET 1 : COMBAT (AIMBOT SÉLECTIF)
+-- ONGLET 1 : COMBAT (AIM SÉLECTIF)
 -- ══════════════════════════════════════
 local CombatTab = Window:CreateTab("⚔️ Combat Elite", 4483362458)
 
-CombatTab:CreateSection("🎯 Aimbot Avancé")
+CombatTab:CreateSection("🎯 Aimbot Custom")
 CombatTab:CreateToggle({
    Name = "Activer l'Aimbot",
    CurrentValue = false,
@@ -49,36 +48,25 @@ CombatTab:CreateToggle({
 })
 
 local PlayerList = {"Tous"}
-for _, p in pairs(Players:GetPlayers()) do
-    if p ~= LocalPlayer then table.insert(PlayerList, p.Name) end
-end
+for _, p in pairs(Players:GetPlayers()) do if p ~= LocalPlayer then table.insert(PlayerList, p.Name) end end
 
 local TargetDropdown = CombatTab:CreateDropdown({
-   Name = "Choisir la Cible",
+   Name = "Cible Spécifique",
    Options = PlayerList,
    CurrentOption = {"Tous"},
-   MultipleOptions = false,
    Callback = function(v) TargetPlayer = v[1] end,
 })
 
 CombatTab:CreateButton({
-   Name = "Rafraîchir Liste Joueurs 🔄",
+   Name = "Actualiser la Liste 🔄",
    Callback = function()
        local NewList = {"Tous"}
-       for _, p in pairs(Players:GetPlayers()) do
-           if p ~= LocalPlayer then table.insert(NewList, p.Name) end
-       end
+       for _, p in pairs(Players:GetPlayers()) do if p ~= LocalPlayer then table.insert(NewList, p.Name) end end
        TargetDropdown:Set(NewList)
    end,
 })
 
-CombatTab:CreateInput({
-   Name = "Distance Max (Infinie)",
-   PlaceholderText = "999999",
-   Callback = function(txt) AimDistance = tonumber(txt) or 999999 end,
-})
-
-CombatTab:CreateSection("🛡️ Hitbox Expander")
+CombatTab:CreateSection("🛡️ Hitbox Modifier")
 CombatTab:CreateSlider({
    Name = "Taille Hitbox",
    Range = {2, 100}, Increment = 1, CurrentValue = 2,
@@ -91,6 +79,7 @@ CombatTab:CreateSlider({
                    if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
                        p.Character.HumanoidRootPart.Size = Vector3.new(v, v, v)
                        p.Character.HumanoidRootPart.Transparency = 0.7
+                       p.Character.HumanoidRootPart.CanCollide = false
                    end
                end
            end
@@ -98,30 +87,29 @@ CombatTab:CreateSlider({
    end,
 })
 
-CombatTab:CreateButton({
-   Name = "Réinitialiser Hitbox 🔄",
-   Callback = function()
-       hitboxSize = 2
-       for _, p in pairs(Players:GetPlayers()) do
-           if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-               p.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1)
-               p.Character.HumanoidRootPart.Transparency = 0
-           end
-       end
-   end,
-})
+CombatTab:CreateButton({Name = "Réinitialiser Hitbox 🔄", Callback = function()
+    hitboxSize = 2
+    for _, p in pairs(Players:GetPlayers()) do
+        if p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+            p.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1)
+            p.Character.HumanoidRootPart.Transparency = 0
+            p.Character.HumanoidRootPart.CanCollide = true
+        end
+    end
+end})
 
 -- ══════════════════════════════════════
--- ONGLET 2 : FLY (LE MEILLEUR POSSIBLE)
+-- ONGLET 2 : MOUVEMENT (BEST FLY & NOCLIP)
 -- ══════════════════════════════════════
-local MoveTab = Window:CreateTab("✈️ Fly Parfait", 4483362458)
+local MoveTab = Window:CreateTab("✈️ Fly & Noclip", 4483362458)
 
-MoveTab:CreateSection("🚀 Vol Directionnel (Mobile & PC)")
+MoveTab:CreateSection("🚀 Vol Directionnel (Optimisé Mobile)")
 MoveTab:CreateToggle({
-   Name = "Activer le Fly Pro",
+   Name = "Activer Fly + Noclip",
    CurrentValue = false,
    Callback = function(v)
        flyActive = v
+       noclipActive = v
        if v then
            task.spawn(function()
                while flyActive do
@@ -130,25 +118,18 @@ MoveTab:CreateToggle({
                    local hum = getHum()
                    if root and hum then
                        hum.PlatformStand = true
+                       local moveDir = hum.MoveDirection
                        
-                       local moveDir = Vector3.zero
-                       
-                       -- Logique Mobile/PC Unifiée
-                       if hum.MoveDirection.Magnitude > 0 then
-                           -- Utilise la direction du joystick relative à la vue caméra
-                           moveDir = hum.MoveDirection
+                       -- DIRECTION PARFAITE : On se déplace vers là où on regarde
+                       if moveDir.Magnitude > 0 then
+                            root.CFrame = root.CFrame:Lerp(CFrame.new(root.Position, root.Position + Camera.CFrame.LookVector) * CFrame.new(0, 0, -flySpeed), 0.5)
+                       else
+                            root.Velocity = Vector3.new(0,0,0)
                        end
                        
-                       -- Hauteur manuelle (PC)
-                       if UIS:IsKeyDown(Enum.KeyCode.Space) then moveDir += Vector3.new(0, 1, 0) end
-                       if UIS:IsKeyDown(Enum.KeyCode.LeftShift) then moveDir -= Vector3.new(0, 1, 0) end
-                       
-                       -- Déplacement par CFrame (Zéro friction, zéro inversion)
-                       root.CFrame = CFrame.new(root.Position + (moveDir * flySpeed)) * CFrame.Angles(math.rad(Camera.CFrame.LookVector.Y * 90), 0, 0)
-                       -- On maintient l'angle de vue pour plus de style
-                       root.CFrame = CFrame.new(root.Position, root.Position + Camera.CFrame.LookVector)
-                       
-                       root.Velocity = Vector3.zero
+                       -- Contrôles PC additionnels
+                       if UIS:IsKeyDown(Enum.KeyCode.Space) then root.CFrame = root.CFrame * CFrame.new(0, flySpeed, 0) end
+                       if UIS:IsKeyDown(Enum.KeyCode.LeftShift) then root.CFrame = root.CFrame * CFrame.new(0, -flySpeed, 0) end
                    end
                end
                if getHum() then getHum().PlatformStand = false end
@@ -157,8 +138,14 @@ MoveTab:CreateToggle({
    end,
 })
 
+MoveTab:CreateToggle({
+    Name = "Noclip Manuel",
+    CurrentValue = false,
+    Callback = function(v) noclipActive = v end,
+})
+
 MoveTab:CreateSlider({
-   Name = "Vitesse de Croisière",
+   Name = "Vitesse du Vol",
    Range = {1, 15}, Increment = 0.5, CurrentValue = 2,
    Callback = function(v) flySpeed = v end,
 })
@@ -192,70 +179,70 @@ VisualTab:CreateToggle({
 })
 
 -- ══════════════════════════════════════
--- ONGLET 4 : FUN (TOOL EMOTE)
+-- ONGLET 4 : EMOTE JERK (IY STYLE)
 -- ══════════════════════════════════════
-local FunTab = Window:CreateTab("🎭 Fun & Tools", 4483362458)
+local FunTab = Window:CreateTab("🎭 Fun & Emotes", 4483362458)
 
 FunTab:CreateButton({
-    Name = "Obtenir Tool : Branler 💦",
+    Name = "Prendre le Tool : Jerk 💦",
     Callback = function()
         local tool = Instance.new("Tool")
-        tool.Name = "Branler 💦"
+        tool.Name = "Jerk 💦"
         tool.RequiresHandle = false
         tool.Parent = LocalPlayer.Backpack
         local track = nil
+        
         tool.Equipped:Connect(function()
             local h = getHum()
             if h then
                 local a = Instance.new("Animation")
-                a.AnimationId = "rbxassetid://3333499508"
+                -- ID Universel pour l'emote Jerk
+                a.AnimationId = "rbxassetid://35154961" 
                 track = h:LoadAnimation(a)
                 track:Play()
                 track:AdjustSpeed(5)
+                track.Looped = true
             end
         end)
-        tool.Unequipped:Connect(function() if track then track:Stop() end end)
-        Rayfield:Notify({Title = "Inventaire", Content = "L'objet est prêt, mon cher !"})
+        
+        tool.Unequipped:Connect(function() 
+            if track then 
+                track:Stop()
+                track:Destroy() 
+            end 
+        end)
+        Rayfield:Notify({Title = "Inventaire", Content = "Équipez l'objet pour commencer l'animation !", Duration = 3})
     end
 })
 
-FunTab:CreateToggle({
-   Name = "Spin-Bot",
-   CurrentValue = false,
-   Callback = function(v) spinning = v end,
-})
+-- ══════════════════════════════════════
+-- LOGIQUE NOCLIP & AIMBOT (BOUCLES)
+-- ══════════════════════════════════════
+RunService.Stepped:Connect(function()
+    if noclipActive and LocalPlayer.Character then
+        for _, part in pairs(LocalPlayer.Character:GetDescendants()) do
+            if part:IsA("BasePart") then part.CanCollide = false end
+        end
+    end
+end)
 
--- ══════════════════════════════════════
--- LOGIQUE FINALE (RUNSERVICE)
--- ══════════════════════════════════════
 RunService.RenderStepped:Connect(function()
     if AimbotActive then
         local targetHead = nil
         local dist = AimDistance
-        
         for _, p in pairs(Players:GetPlayers()) do
             if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("Head") then
-                -- Filtre par joueur sélectionné
                 if TargetPlayer == "Tous" or TargetPlayer == p.Name then
                     local d = (LocalPlayer.Character.HumanoidRootPart.Position - p.Character.HumanoidRootPart.Position).Magnitude
                     if d < dist then
                         local pos, vis = Camera:WorldToViewportPoint(p.Character.Head.Position)
-                        if vis then
-                            dist = d
-                            targetHead = p.Character.Head
-                        end
+                        if vis then dist = d; targetHead = p.Character.Head end
                     end
                 end
             end
         end
-        if targetHead then
-            Camera.CFrame = CFrame.new(Camera.CFrame.Position, targetHead.Position)
-        end
-    end
-    
-    if spinning and getRoot() then
-        getRoot().CFrame = getRoot().CFrame * CFrame.Angles(0, math.rad(spinSpeed), 0)
+        if targetHead then Camera.CFrame = CFrame.new(Camera.CFrame.Position, targetHead.Position) end
     end
 end)
 
-Rayfield:Notify({Title = "Luluclc3 Master V15", Content = "Système d'Excellence activé !", Duration = 5})
+Rayfield:Notify({Title = "Luluclc3 Master V17", Content = "Le script ultime est chargé !", Duration = 5})
