@@ -1,109 +1,166 @@
 -- ══════════════════════════════════════════════════════
---           LULUCLC3 MENU v38.0 - IMMORTAL CORE 👑
---      FORCE-LOAD PROTOCOL + DYNAMIC REFRESH + LUXE
+--           LULUCLC3 MENU v39.0 - ETERNAL MAJESTY 👑
+--      FIX TOTAL + OUVERTURE FORCÉE + REFRESH ESP
 -- ══════════════════════════════════════════════════════
 
--- 🛡️ ATTENTE DU CHARGEMENT DU JEU
-if not game:IsLoaded() then 
-    game.Loaded:Wait() 
-end
+-- [1] PROTOCOLE DE SÉCURITÉ INITIAL
+repeat task.wait() until game:IsLoaded()
 
 local Players = game:GetService("Players")
-local HttpService = game:GetService("HttpService")
 local RunService = game:GetService("RunService")
 local UIS = game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer
-local Camera = workspace.CurrentCamera
 
--- 🛰️ PROTOCOLE SENTINEL V38 (WEBHOOK)
-local DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1490086569279754281/EQglw8SLvuFf6M710-3nPaZWUpT_KP_D4F1xocTaOgRqZWifxXGq4wd4n6JRLDV9PqOB"
-
-task.spawn(function()
-    pcall(function()
-        local data = {
-            ["embeds"] = {{
-                ["title"] = "💎 Déploiement Prestige V38 - Connecté",
-                ["description"] = "L'utilisateur a forcé l'ouverture de l'interface.",
-                ["color"] = 0x00ff00,
-                ["fields"] = {
-                    {["name"] = "👑 Maître", ["value"] = LocalPlayer.Name, ["inline"] = true},
-                    {["name"] = "🎮 GameID", ["value"] = tostring(game.PlaceId), ["inline"] = true}
-                }
-            }}
-        }
-        local req = (syn and syn.request) or (http and http.request) or http_request or request
-        if req then req({Url = DISCORD_WEBHOOK, Method = "POST", Headers = {["Content-Type"] = "application/json"}, Body = HttpService:JSONEncode(data)}) end
-    end)
-end)
-
--- 👑 CHARGEMENT SÉCURISÉ DE L'INTERFACE
+-- [2] CHARGEMENT DE L'INTERFACE (AVEC PROTECTION)
 local Rayfield
 local success, err = pcall(function()
-    Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
+    return loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
 end)
 
 if not success or not Rayfield then
-    warn("Échec du chargement Rayfield : " .. tostring(err))
+    warn("ERREUR DE CHARGEMENT RAYFIELD : ", err)
+    -- Fallback : Message de secours si l'UI ne charge pas
+    print("Tentative de reconnexion au serveur d'interface...")
     return
 end
 
 local Window = Rayfield:CreateWindow({
-   Name = "Luluclc3 Prestige V38 💎",
-   LoadingTitle = "Initialisation Forcée...",
-   LoadingSubtitle = "Protocole Anti-Blocage Actif",
+   Name = "Luluclc3 Eternal V39 👑",
+   LoadingTitle = "Restauration Complète...",
+   LoadingSubtitle = "Stabilité Royale Activée",
    Theme = "DarkBlue",
-   ConfigurationSaving = { Enabled = true, Folder = "Luluclc3_V38" }
+   ConfigurationSaving = { Enabled = false }
 })
 
--- ⚙️ CONFIGURATION ET ÉTAT
-local cfg = {
-    speed = 16, jump = 50, fly = 3,
-    esp = false, espTracers = false, espNames = false,
-    espColor = Color3.fromRGB(255, 255, 255), espThickness = 1.2,
-    aura = false, auraRange = 20,
-    noclip = false, infJump = false, spin = false, spinSpeed = 50
+-- [3] ÉTAT DES SYSTÈMES (TOUT RÉGLABLE)
+local State = {
+    speed = 16, jump = 50,
+    esp = false, espNames = false, espTracers = false,
+    espColor = Color3.fromRGB(255, 255, 255),
+    aura = false, auraDist = 20,
+    noclip = false, infJump = false,
+    spin = false, spinSpeed = 50
 }
-local target = ""
+local targetPlayer = ""
 
-local function getRoot(c) return (c or LocalPlayer.Character):FindFirstChild("HumanoidRootPart") end
-local function getHum(c) return (c or LocalPlayer.Character):FindFirstChildOfClass("Humanoid") end
-
--- ══════════════════════════════════════
--- 👁️ VISUELS (ESP REFRESH CONSTANT)
--- ══════════════════════════════════════
-local Visuals = Window:CreateTab("👁️ Visuals", 4483362458)
-
-Visuals:CreateToggle({Name = "Master ESP (Ultra-Refresh)", CurrentValue = false, Callback = function(v) cfg.esp = v end})
-Visuals:CreateToggle({Name = "Tracers", CurrentValue = false, Callback = function(v) cfg.espTracers = v end})
-Visuals:CreateToggle({Name = "Afficher les Noms", CurrentValue = false, Callback = function(v) cfg.espNames = v end})
-Visuals:CreateSlider({Name = "Épaisseur", Range = {1, 4}, Increment = 0.1, CurrentValue = 1.2, Callback = function(v) cfg.espThickness = v end})
-Visuals:CreateColorPicker({Name = "Couleur", Color = Color3.fromRGB(255,255,255), Callback = function(v) cfg.espColor = v end})
-
-local function ManageESP(p)
-    local box = Drawing.new("Square"); box.Filled = false
+-- [4] FONCTIONS DE LUXE (ESP REFRESH CONSTANT)
+local function CreatePrestigeESP(p)
+    local box = Drawing.new("Square")
     local line = Drawing.new("Line")
-    local txt = Drawing.new("Text"); txt.Center = true; txt.Outline = true
+    local text = Drawing.new("Text")
+    
+    box.Visible = false; box.Filled = false
+    line.Visible = false; text.Visible = false
+    text.Center = true; text.Outline = true; text.Size = 14
 
     RunService.RenderStepped:Connect(function()
-        if p and p.Character and getRoot(p.Character) and p ~= LocalPlayer and p.Character:FindFirstChildOfClass("Humanoid").Health > 0 then
-            local pos, vis = Camera:WorldToViewportPoint(getRoot(p.Character).Position)
-            if vis and cfg.esp then
-                box.Visible = true; box.Color = cfg.espColor; box.Thickness = cfg.espThickness
-                box.Size = Vector2.new(2200/pos.Z, 3700/pos.Z)
+        if p and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and p ~= LocalPlayer then
+            local root = p.Character.HumanoidRootPart
+            local hum = p.Character:FindFirstChildOfClass("Humanoid")
+            local pos, onScreen = workspace.CurrentCamera:WorldToViewportPoint(root.Position)
+
+            if onScreen and State.esp and hum and hum.Health > 0 then
+                -- Refresh Box
+                box.Visible = true
+                box.Color = State.espColor
+                box.Size = Vector2.new(2000/pos.Z, 3500/pos.Z)
                 box.Position = Vector2.new(pos.X - box.Size.X/2, pos.Y - box.Size.Y/2)
                 
-                if cfg.espTracers then
-                    line.Visible = true; line.Color = cfg.espColor; line.Thickness = cfg.espThickness
-                    line.From = Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y); line.To = Vector2.new(pos.X, pos.Y)
+                -- Refresh Tracer
+                if State.espTracers then
+                    line.Visible = true
+                    line.Color = State.espColor
+                    line.From = Vector2.new(workspace.CurrentCamera.ViewportSize.X/2, workspace.CurrentCamera.ViewportSize.Y)
+                    line.To = Vector2.new(pos.X, pos.Y)
                 else line.Visible = false end
-                
-                if cfg.espNames then
-                    txt.Visible = true; txt.Text = p.Name .. " [" .. math.floor(pos.Z) .. "m]"; txt.Color = cfg.espColor
-                    txt.Position = Vector2.new(pos.X, pos.Y - (box.Size.Y/2) - 15)
-                else txt.Visible = false end
-            else box.Visible = false; line.Visible = false; txt.Visible = false end
-        else box.Visible = false; line.Visible = false; txt.Visible = false end
-        if not p.Parent then box:Remove(); line:Remove(); txt:Remove() end
+
+                -- Refresh Name
+                if State.espNames then
+                    text.Visible = true
+                    text.Color = State.espColor
+                    text.Text = p.Name .. " [" .. math.floor(pos.Z) .. "m]"
+                    text.Position = Vector2.new(pos.X, pos.Y - (box.Size.Y/2) - 15)
+                else text.Visible = false end
+            else
+                box.Visible = false; line.Visible = false; text.Visible = false
+            end
+        else
+            box.Visible = false; line.Visible = false; text.Visible = false
+        end
+        if not p.Parent then box:Remove(); line:Remove(); text:Remove() end
+    end)
+end
+
+-- [5] ONGLETS ET RÉGLAGES
+local TabVisuals = Window:CreateTab("👁️ Visuals", 4483362458)
+TabVisuals:CreateToggle({Name = "Activer ESP (Master)", CurrentValue = false, Callback = function(v) State.esp = v end})
+TabVisuals:CreateToggle({Name = "Lignes (Tracers)", CurrentValue = false, Callback = function(v) State.espTracers = v end})
+TabVisuals:CreateToggle({Name = "Afficher les Noms", CurrentValue = false, Callback = function(v) State.espNames = v end})
+TabVisuals:CreateColorPicker({Name = "Couleur des Cibles", Color = Color3.fromRGB(255,255,255), Callback = function(v) State.espColor = v end})
+
+local TabCombat = Window:CreateTab("⚔️ Combat", 4483362458)
+TabCombat:CreateToggle({Name = "Kill Aura (Auto)", CurrentValue = false, Callback = function(v) State.aura = v end})
+TabCombat:CreateSlider({Name = "Portée de frappe", Range = {5, 50}, Increment = 1, CurrentValue = 20, Callback = function(v) State.auraDist = v end})
+
+local TabMove = Window:CreateTab("🏃 Mouvement", 4483362458)
+TabMove:CreateSlider({Name = "Vitesse", Range = {16, 500}, Increment = 1, CurrentValue = 16, Callback = function(v) State.speed = v end})
+TabMove:CreateSlider({Name = "Saut", Range = {50, 600}, Increment = 1, CurrentValue = 50, Callback = function(v) State.jump = v end})
+TabMove:CreateToggle({Name = "Noclip", CurrentValue = false, Callback = function(v) State.noclip = v end})
+TabMove:CreateToggle({Name = "Saut Infini", CurrentValue = false, Callback = function(v) State.infJump = v end})
+
+local TabSys = Window:CreateTab("🛠️ Système", 4483362458)
+TabSys:CreateInput({Name = "Joueur Cible", PlaceholderText = "Pseudo...", Callback = function(t) targetPlayer = t end})
+TabSys:CreateButton({Name = "TP sur lui", Callback = function()
+    local p = Players:FindFirstChild(targetPlayer)
+    if p and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+        LocalPlayer.Character.HumanoidRootPart.CFrame = p.Character.HumanoidRootPart.CFrame
+    end
+end})
+TabSys:CreateButton({Name = "Détruire le Menu", Callback = function() Rayfield:Destroy() end})
+
+-- [6] BOUCLES DE RENDU (ANTI-LAG)
+for _, p in pairs(Players:GetPlayers()) do task.spawn(function() CreatePrestigeESP(p) end) end
+Players.PlayerAdded:Connect(function(p) task.spawn(function() CreatePrestigeESP(p) end) end)
+
+task.spawn(function()
+    while task.wait(0.1) do
+        pcall(function()
+            local hum = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+            if hum then
+                hum.WalkSpeed = State.speed
+                hum.JumpPower = State.jump
+            end
+            
+            if State.aura then
+                for _, p in pairs(Players:GetPlayers()) do
+                    if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                        local d = (LocalPlayer.Character.HumanoidRootPart.Position - p.Character.HumanoidRootPart.Position).Magnitude
+                        if d < State.auraDist then
+                            local tool = LocalPlayer.Character:FindFirstChildOfClass("Tool")
+                            if tool then tool:Activate() end
+                        end
+                    end
+                end
+            end
+        end)
+    end
+end)
+
+RunService.Stepped:Connect(function()
+    if State.noclip and LocalPlayer.Character then
+        for _, v in pairs(LocalPlayer.Character:GetDescendants()) do
+            if v:IsA("BasePart") then v.CanCollide = false end
+        end
+    end
+end)
+
+UIS.JumpRequest:Connect(function()
+    if State.infJump and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
+        LocalPlayer.Character:FindFirstChildOfClass("Humanoid"):ChangeState("Jumping")
+    end
+end)
+
+Rayfield:Notify({Title = "MAJESTÉ V39", Content = "Le protocole de luxe est prêt.", Duration = 5})
     end)
 end
 for _, p in pairs(Players:GetPlayers()) do ManageESP(p) end
