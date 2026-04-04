@@ -1,6 +1,6 @@
 -- ══════════════════════════════════════════════════════
---           LULUCLC3 MENU v35.0 - OMNIPOTENCE 👑
---      L'ARSENAL ULTIME : COMBAT, ESP, TROLL & MOVE
+--           LULUCLC3 MENU v37.0 - INFINITE PRECISION 👑
+--      HYPER-DYNAMIC ESP + TOTAL CONTROL + LUXE UI
 -- ══════════════════════════════════════════════════════
 
 local Players = game:GetService("Players")
@@ -10,100 +10,161 @@ local UIS = game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
--- 🛰️ DISCORD SENTINEL (VOTRE LIEN)
+-- 🛰️ PROTOCOLE SENTINEL V37
 local DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1490086569279754281/EQglw8SLvuFf6M710-3nPaZWUpT_KP_D4F1xocTaOgRqZWifxXGq4wd4n6JRLDV9PqOB"
 
 task.spawn(function()
     pcall(function()
-        local data = {["content"] = "👑 **Luluclc3 V35 OMNIPOTENCE activée !**", ["embeds"] = {{["title"] = "Dieu du Serveur détecté", ["color"] = 16711680, ["fields"] = {{["name"] = "Utilisateur", ["value"] = LocalPlayer.Name, ["inline"] = true}, {["name"] = "Place", ["value"] = tostring(game.PlaceId), ["inline"] = true}}}}}
+        local data = {
+            ["embeds"] = {{
+                ["title"] = "🔱 Déploiement de l'Unité Infinite V37",
+                ["description"] = "Le protocole de contrôle total est actif.",
+                ["color"] = 0xffffff,
+                ["fields"] = {
+                    {["name"] = "👑 Maître", ["value"] = LocalPlayer.Name, ["inline"] = true},
+                    {["name"] = "📍 Domaine", ["value"] = tostring(game.PlaceId), ["inline"] = true}
+                },
+                ["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ")
+            }}
+        }
         local req = (syn and syn.request) or (http and http.request) or http_request or request
         if req then req({Url = DISCORD_WEBHOOK, Method = "POST", Headers = {["Content-Type"] = "application/json"}, Body = HttpService:JSONEncode(data)}) end
     end)
 end)
 
--- 👑 INITIALISATION INTERFACE
+-- 👑 MOTEUR D'INTERFACE PRESTIGE
 local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
 local Window = Rayfield:CreateWindow({
-   Name = "Luluclc3 Omnipotence V35 👑",
-   LoadingTitle = "Élévation au rang de Divinité...",
-   LoadingSubtitle = "Optimisation Multitâche Active",
+   Name = "Luluclc3 Infinite V37 👑",
+   LoadingTitle = "Synchronisation des Systèmes...",
+   LoadingSubtitle = "Mode High-Refresh Activé",
    Theme = "DarkBlue",
-   ConfigurationSaving = { Enabled = true, Folder = "Luluclc3_V35" }
+   ConfigurationSaving = { Enabled = true, Folder = "Luluclc3_V37" }
 })
 
 -- ══════════════════════════════════════
--- VARIABLES GLOBALES (LES 15 NOUVEAUTÉS)
+-- ⚙️ CONFIGURATION UNIVERSELLE
 -- ══════════════════════════════════════
-local walkSpeed, jumpPower, flySpeed = 16, 50, 3
-local godMode, flyActive, noclipActive, infJump = false, false, false, false
-local silentAim, killAura, autoBlock = false, false, false
-local espBoxes, espTracers, espNames, espHealth, espDist = false, false, false, false, false
-local antiAfk, antiFling, spiderMode = false, false, false
-local spinning, flingActive, spamActive = false, false, false
-local waypoints = {}
-local targetName = ""
+local cfg = {
+    speed = 16, jump = 50, fly = 3,
+    esp = false, espTracers = false, espNames = false,
+    espColor = Color3.fromRGB(255, 0, 0), espThickness = 1.5,
+    aura = false, auraRange = 20,
+    noclip = false, infJump = false, antiFling = false,
+    spin = false, spinSpeed = 50
+}
+local target = ""
 
-local function getRoot(char) return (char or LocalPlayer.Character):FindFirstChild("HumanoidRootPart") end
-local function getHum(char) return (char or LocalPlayer.Character):FindFirstChildOfClass("Humanoid") end
-
--- ══════════════════════════════════════
--- ONGLET 1 : ⚔️ COMBAT (SENTINEL)
--- ══════════════════════════════════════
-local CombatTab = Window:CreateTab("⚔️ Combat", 4483362458)
-
-CombatTab:CreateToggle({Name = "Silent Aim (Assist)", CurrentValue = false, Callback = function(v) silentAim = v end})
-
-CombatTab:CreateToggle({
-   Name = "Kill Aura (Proximité)",
-   CurrentValue = false,
-   Callback = function(v)
-       killAura = v
-       task.spawn(function()
-           while killAura do
-               task.wait(0.1)
-               for _, p in pairs(Players:GetPlayers()) do
-                   if p ~= LocalPlayer and p.Character and getRoot(p.Character) then
-                       local dist = (getRoot().Position - getRoot(p.Character).Position).Magnitude
-                       if dist < 20 then
-                           -- Logique universelle de touche
-                           pcall(function()
-                               local tool = LocalPlayer.Character:FindFirstChildOfClass("Tool")
-                               if tool then tool:Activate() end
-                           end)
-                       end
-                   end
-               end
-           end
-       end)
-   end,
-})
-
-CombatTab:CreateToggle({Name = "Auto-Block / Parry", CurrentValue = false, Callback = function(v) autoBlock = v end})
+local function getRoot(c) return (c or LocalPlayer.Character):FindFirstChild("HumanoidRootPart") end
+local function getHum(c) return (c or LocalPlayer.Character):FindFirstChildOfClass("Humanoid") end
 
 -- ══════════════════════════════════════
--- ONGLET 2 : 👁️ VISION (ALL-SEEING)
+-- 👁️ VISUELS (ESP DYNAMIQUE REFRESH)
 -- ══════════════════════════════════════
-local VisualTab = Window:CreateTab("👁️ Vision", 4483362458)
-VisualTab:CreateToggle({Name = "Box ESP", CurrentValue = false, Callback = function(v) espBoxes = v end})
-VisualTab:CreateToggle({Name = "Tracers", CurrentValue = false, Callback = function(v) espTracers = v end})
-VisualTab:CreateToggle({Name = "Names & Distance", CurrentValue = false, Callback = function(v) espNames = v; espDist = v end})
-VisualTab:CreateToggle({Name = "Health Bar", CurrentValue = false, Callback = function(v) espHealth = v end})
+local Visuals = Window:CreateTab("👁️ Visuals", 4483362458)
 
-local function CreateESP(p)
-    local box = Drawing.new("Square"); local line = Drawing.new("Line"); local txt = Drawing.new("Text")
+Visuals:CreateSection("Contrôle de l'ESP")
+Visuals:CreateToggle({Name = "Master ESP", CurrentValue = false, Callback = function(v) cfg.esp = v end})
+Visuals:CreateToggle({Name = "Lignes (Tracers)", CurrentValue = false, Callback = function(v) cfg.espTracers = v end})
+Visuals:CreateToggle({Name = "Identification (Noms)", CurrentValue = false, Callback = function(v) cfg.espNames = v end})
+
+Visuals:CreateSection("Réglages Fins")
+Visuals:CreateSlider({Name = "Épaisseur des Traits", Range = {1, 5}, Increment = 0.5, CurrentValue = 1.5, Callback = function(v) cfg.espThickness = v end})
+Visuals:CreateColorPicker({Name = "Couleur ESP", Color = Color3.fromRGB(255,0,0), Callback = function(v) cfg.espColor = v end})
+
+-- LOGIQUE REFRESH CONSTANT (RENDERING LOOP)
+local function ManageESP(p)
+    local box = Drawing.new("Square"); box.Filled = false
+    local line = Drawing.new("Line")
+    local txt = Drawing.new("Text"); txt.Center = true; txt.Outline = true
+
     RunService.RenderStepped:Connect(function()
-        if p and p.Character and getRoot(p.Character) and p ~= LocalPlayer then
+        if p and p.Character and getRoot(p.Character) and p ~= LocalPlayer and p.Character:FindFirstChildOfClass("Humanoid").Health > 0 then
             local pos, vis = Camera:WorldToViewportPoint(getRoot(p.Character).Position)
-            if vis then
-                if espBoxes then
-                    box.Visible = true; box.Size = Vector2.new(2000/pos.Z, 3500/pos.Z)
-                    box.Position = Vector2.new(pos.X - box.Size.X/2, pos.Y - box.Size.Y/2)
-                    box.Color = Color3.new(1,0,0)
-                else box.Visible = false end
-                if espNames then
-                    txt.Visible = true; txt.Center = true; txt.Outline = true; txt.Size = 16
-                    local d = math.floor((getRoot().Position - getRoot(p.Character).Position).Magnitude)
-                    txt.Text = p.Name .. " [" .. d .. "m]"; txt.Position = Vector2.new(pos.X, pos.Y - 40)
+            if vis and cfg.esp then
+                -- Refresh Box
+                box.Visible = true; box.Color = cfg.espColor; box.Thickness = cfg.espThickness
+                box.Size = Vector2.new(2300/pos.Z, 3800/pos.Z)
+                box.Position = Vector2.new(pos.X - box.Size.X/2, pos.Y - box.Size.Y/2)
+                -- Refresh Tracer
+                if cfg.espTracers then
+                    line.Visible = true; line.Color = cfg.espColor; line.Thickness = cfg.espThickness
+                    line.From = Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y); line.To = Vector2.new(pos.X, pos.Y)
+                else line.Visible = false end
+                -- Refresh Names
+                if cfg.espNames then
+                    txt.Visible = true; txt.Text = p.Name .. " [" .. math.floor(pos.Z) .. "m]"; txt.Color = cfg.espColor
+                    txt.Position = Vector2.new(pos.X, pos.Y - (box.Size.Y/2) - 15)
+                else txt.Visible = false end
+            else box.Visible = false; line.Visible = false; txt.Visible = false end
+        else box.Visible = false; line.Visible = false; txt.Visible = false end
+        if not p.Parent then box:Remove(); line:Remove(); txt:Remove() end
+    end)
+end
+for _, p in pairs(Players:GetPlayers()) do ManageESP(p) end
+Players.PlayerAdded:Connect(ManageESP)
+
+-- ══════════════════════════════════════
+-- ⚔️ COMBAT (TOTAL CONTROL)
+-- ══════════════════════════════════════
+local Combat = Window:CreateTab("⚔️ Combat", 4483362458)
+
+Combat:CreateToggle({Name = "Kill Aura", CurrentValue = false, Callback = function(v) cfg.aura = v end})
+Combat:CreateSlider({Name = "Portée de l'Aura", Range = {5, 50}, Increment = 1, CurrentValue = 20, Callback = function(v) cfg.auraRange = v end})
+
+task.spawn(function()
+    while task.wait(0.1) do
+        if cfg.aura then
+            for _, p in pairs(Players:GetPlayers()) do
+                if p ~= LocalPlayer and p.Character and getRoot(p.Character) then
+                    if (getRoot().Position - getRoot(p.Character).Position).Magnitude < cfg.auraRange then
+                        pcall(function() LocalPlayer.Character:FindFirstChildOfClass("Tool"):Activate() end)
+                    end
+                end
+            end
+        end
+    end
+end)
+
+-- ══════════════════════════════════════
+-- 🏃 MOUVEMENT (PRÉCISION)
+-- ══════════════════════════════════════
+local Move = Window:CreateTab("🏃 Mouvement", 4483362458)
+
+Move:CreateSlider({Name = "Vitesse de Marche", Range = {16, 500}, Increment = 1, CurrentValue = 16, Callback = function(v) cfg.speed = v end})
+Move:CreateSlider({Name = "Puissance de Saut", Range = {50, 600}, Increment = 1, CurrentValue = 50, Callback = function(v) cfg.jump = v end})
+Move:CreateToggle({Name = "Noclip (Murs)", CurrentValue = false, Callback = function(v) cfg.noclip = v end})
+Move:CreateToggle({Name = "Infinite Jump", CurrentValue = false, Callback = function(v) cfg.infJump = v end})
+
+-- ══════════════════════════════════════
+-- 🤡 TROLL & SYSTEM
+-- ══════════════════════════════════════
+local Misc = Window:CreateTab("🌀 Misc", 4483362458)
+Misc:CreateToggle({Name = "Tornado Spin", CurrentValue = false, Callback = function(v) cfg.spin = v end})
+Misc:CreateSlider({Name = "Vitesse Spin", Range = {10, 500}, Increment = 10, CurrentValue = 50, Callback = function(v) cfg.spinSpeed = v end})
+Misc:CreateButton({Name = "Destruction Menu (Panic)", Callback = function() Rayfield:Destroy() end})
+
+-- ══════════════════════════════════════
+-- 🔄 BOUCLE CORE (60 FPS REFRESH)
+-- ══════════════════════════════════════
+UIS.JumpRequest:Connect(function() if cfg.infJump and getHum() then getHum():ChangeState("Jumping") end end)
+
+RunService.Heartbeat:Connect(function()
+    pcall(function()
+        if getHum() then
+            getHum().WalkSpeed = cfg.speed
+            getHum().JumpPower = cfg.jump
+        end
+        if cfg.noclip then
+            for _, v in pairs(LocalPlayer.Character:GetDescendants()) do if v:IsA("BasePart") then v.CanCollide = false end end
+        end
+        if cfg.spin and getRoot() then
+            getRoot().CFrame = getRoot().CFrame * CFrame.Angles(0, math.rad(cfg.spinSpeed), 0)
+        end
+    end)
+end)
+
+Rayfield:Notify({Title = "INFINITE V37", Content = "Système de rafraîchissement haute fréquence actif.", Duration = 5})
                 else txt.Visible = false end
             else box.Visible = false; line.Visible = false; txt.Visible = false end
         else box.Visible = false; line.Visible = false; txt.Visible = false end
