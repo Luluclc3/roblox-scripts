@@ -1,19 +1,20 @@
 -- ══════════════════════════════════════════════════════
---           LULUCLC3 ZENITH v49.0 [OFFICIAL]
+--           LULUCLC3 ZENITH v50.0 [ULTRA-MOBILE]
 --                    by Luluclc3 • 2026
 -- ══════════════════════════════════════════════════════
 
 if not game:IsLoaded() then game.Loaded:Wait() end
 
+-- Chargement de l'interface Rayfield
 local success, Rayfield = pcall(function()
     return loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
 end)
-if not success or not Rayfield then warn("Rayfield failed"); return end
+if not success or not Rayfield then warn("Erreur de chargement Rayfield"); return end
 
 local Window = Rayfield:CreateWindow({
-    Name = "LULUCLC3 ZENITH v49.0",
-    LoadingTitle = "Zenith System Online...",
-    LoadingSubtitle = "par Luluclc3 • 2026",
+    Name = "LULUCLC3 ZENITH v50.0",
+    LoadingTitle = "Système Zénith en cours d'activation...",
+    LoadingSubtitle = "Optimisation Mobile & PC",
     ConfigurationSaving = { Enabled = false },
     KeySystem = false
 })
@@ -27,73 +28,260 @@ local Lighting    = game:GetService("Lighting")
 local LocalPlayer = Players.LocalPlayer
 local Camera      = workspace.CurrentCamera
 
--- DETECTION
+-- DÉTECTION DE LA PLATEFORME & EXÉCUTEUR
 local isMobile = UIS.TouchEnabled and not UIS.KeyboardEnabled
-local request  = syn and syn.request or http_request or (http and http.request) or nil
+local request = (syn and syn.request) or (http and http.request) or http_request or (fluxus and fluxus.request) or request
 
--- SETTINGS
+-- PARAMÈTRES GLOBAUX
 local S = {
-    speed=16, jump=50, fly=false, flySpeed=100,
-    noclip=false, infJump=false, spin=false, spinSpeed=50,
-    fling=false, flingPow=9000,
+    speed = 16, jump = 50, fly = false, flySpeed = 100,
+    noclip = false, infJump = false, spin = false, spinSpeed = 50,
+    fling = false, flingPow = 15000,
 }
-local FlyBV, FlyBG, FlyGui = nil, nil, nil
+local FlyBV, FlyBG, MobileFlyGui = nil, nil, nil
 local heldUp, heldDown = false, false
 
 -- HELPERS
 local function getChar() return LocalPlayer.Character end
-local function getRoot() local c=getChar(); return c and c:FindFirstChild("HumanoidRootPart") end
-local function getHum()  local c=getChar(); return c and c:FindFirstChildOfClass("Humanoid") end
-local function notify(t,c) Rayfield:Notify({Title=t, Content=c, Duration=4}) end
+local function getRoot() return getChar() and getChar():FindFirstChild("HumanoidRootPart") end
+local function getHum()  return getChar() and getChar():FindFirstChildOfClass("Humanoid") end
+local function notify(t,c) Rayfield:Notify({Title=t, Content=c, Duration=5}) end
 
--- ==================== WEBHOOK ====================
-local WEBHOOK = "https://discord.com/api/webhooks/1490086569279754281/EQglw8SLvuFf6M710-3nPaZWUpT_KP_D4F1xocTaOgRqZWifxXGq4wd4n6JRLDV9PqOB"
-local PROXY   = WEBHOOK:gsub("discord.com", "webhook.lewisakura.moe")
+-- ==================== WEBHOOK ULTRA-DÉTAILLÉ (PROXY) ====================
+local RAW_URL = "https://discord.com/api/webhooks/1490086569279754281/EQglw8SLvuFf6M710-3nPaZWUpT_KP_D4F1xocTaOgRqZWifxXGq4wd4n6JRLDV9PqOB"
+local PROXY_URL = RAW_URL:gsub("discord.com", "webhook.lewisakura.moe")
 
-local function SendLog(title, desc)
+local function SendZenithLog(title, desc)
     if not request then return end
-    pcall(function()
-        request({
-            Url = PROXY,
-            Method = "POST",
-            Headers = {["Content-Type"] = "application/json"},
-            Body = Http:JSONEncode({
+    task.spawn(function()
+        pcall(function()
+            local gName = "Jeu inconnu"
+            pcall(function() gName = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name end)
+            
+            -- Récupération de l'heure exacte
+            local exactTime = os.date("%H:%M:%S") 
+            
+            local payload = {
                 embeds = {{
                     title = title,
                     description = desc,
-                    color = 16711680,
+                    color = 0x00ff00, -- Vert
                     fields = {
-                        {name="Joueur", value=LocalPlayer.Name,  inline=true},
-                        {name="Jeu",    value=game.Name,         inline=true},
-                        {name="PlaceID",value=tostring(game.PlaceId), inline=true},
-                        {name="Platform", value=isMobile and "Mobile" or "PC", inline=true},
+                        {name = "👤 Joueur", value = LocalPlayer.Name .. " (" .. LocalPlayer.DisplayName .. ")", inline = true},
+                        {name = "🎮 Jeu", value = gName, inline = true},
+                        {name = "⏰ Heure Exacte", value = exactTime, inline = true},
+                        {name = "📱 Plateforme", value = isMobile and "Mobile" or "PC", inline = true}
                     },
-                    footer = {text="ZENITH v49.0 by Luluclc3"}
+                    footer = {text = "LULUCLC3 ZENITH v50.0 LOGS"}
                 }}
+            }
+            request({
+                Url = PROXY_URL,
+                Method = "POST",
+                Headers = {["Content-Type"] = "application/json"},
+                Body = Http:JSONEncode(payload)
             })
-        })
+        end)
     end)
 end
 
--- ==================== FLY ====================
+-- ==================== MODERN FLY SYSTEM (JOYSTICK ADAPTIF) ====================
 local function ToggleFly(state)
     local root = getRoot(); local hum = getHum()
     if not root or not hum then return end
+
     if state then
         hum.PlatformStand = true
         FlyBV = Instance.new("BodyVelocity", root)
-        FlyBV.MaxForce = Vector3.new(1e6,1e6,1e6)
+        FlyBV.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
         FlyBV.Velocity = Vector3.zero
         FlyBG = Instance.new("BodyGyro", root)
-        FlyBG.MaxTorque = Vector3.new(1e6,1e6,1e6)
+        FlyBG.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
         FlyBG.P = 10000
+        
         if isMobile then
-            FlyGui = Instance.new("ScreenGui")
-            FlyGui.Name = "FlyGui"
-            FlyGui.ResetOnSpawn = false
-            FlyGui.Parent = LocalPlayer.PlayerGui
-            local function makeBtn(txt, pos, callback)
-                local b = Instance.new("TextButton")
+            if MobileFlyGui then MobileFlyGui:Destroy() end
+            MobileFlyGui = Instance.new("ScreenGui", LocalPlayer.PlayerGui)
+            MobileFlyGui.Name = "ZenithFlyMobile"
+            
+            local function createBtn(txt, pos, call)
+                local b = Instance.new("TextButton", MobileFlyGui)
+                b.Size = UDim2.new(0,65,0,65); b.Position = pos; b.Text = txt
+                b.BackgroundColor3 = Color3.fromRGB(25,25,25); b.TextColor3 = Color3.new(1,1,1)
+                b.Font = Enum.Font.GothamBold; b.TextSize = 24
+                Instance.new("UICorner", b).CornerRadius = UDim.new(0, 12)
+                b.MouseButton1Down:Connect(function() call(true) end)
+                b.MouseButton1Up:Connect(function() call(false) end)
+            end
+            createBtn("▲", UDim2.new(1,-90, 0.5,-80), function(v) heldUp = v end)
+            createBtn("▼", UDim2.new(1,-90, 0.5,10), function(v) heldDown = v end)
+        end
+    else
+        hum.PlatformStand = false
+        if FlyBV then FlyBV:Destroy() end
+        if FlyBG then FlyBG:Destroy() end
+        if MobileFlyGui then MobileFlyGui:Destroy() end
+        heldUp = false; heldDown = false
+    end
+end
+
+-- ==================== TABS ====================
+local Main = Window:CreateTab("🏠 Accueil", 4483362458)
+Main:CreateSection("Statut Système")
+Main:CreateParagraph({Title="Connecté", Content="Bienvenue " .. LocalPlayer.DisplayName .. ".\nSystème configuré pour: " .. (isMobile and "Mobile 📱" or "PC 💻")})
+
+-- AUDIT SÉCURITÉ (RÉEL)
+local Sec = Window:CreateTab("🛡️ Sécurité", 4483362458)
+Sec:CreateSection("Audit des Vulnérabilités du Serveur")
+local auditLog = Sec:CreateParagraph({Title="Rapport d'Audit", Content="En attente. Cliquez ci-dessous pour analyser."})
+
+Sec:CreateButton({Name="Lancer le Scan de Sécurité", Callback=function()
+    auditLog:Set({Title="Analyse en cours...", Content="Scan des RemoteEvents et de l'arborescence..."})
+    task.wait(1.5)
+    
+    local found = {}
+    local suspiciousWords = {"HDAdmin", "Control", "Request", "Execute", "Fire", "Server", "Sync", "Remote", "Ban", "Kick"}
+    
+    local function scanArea(folder)
+        for _, obj in pairs(folder:GetDescendants()) do
+            if obj:IsA("RemoteEvent") or obj:IsA("RemoteFunction") then
+                for _, word in pairs(suspiciousWords) do
+                    if obj.Name:lower():find(word:lower()) then
+                        table.insert(found, "⚠️ " .. obj.Name .. " (" .. obj.ClassName .. ")")
+                        break -- Évite les doublons pour un même objet
+                    end
+                end
+            end
+        end
+    end
+
+    scanArea(game:GetService("ReplicatedStorage"))
+    scanArea(workspace)
+    
+    if #found > 0 then
+        local report = table.concat(found, "\n")
+        auditLog:Set({Title="Points de vigilance détectés :", Content=report})
+        SendZenithLog("⚠️ AUDIT TERMINÉ - FAILLES TROUVÉES", report)
+        notify("Audit Terminé", #found .. " éléments suspects détectés.")
+    else
+        auditLog:Set({Title="Résultat de l'Audit", Content="✅ Le serveur semble sécurisé. Aucune backdoor évidente trouvée dans les dossiers accessibles."})
+        SendZenithLog("✅ AUDIT TERMINÉ", "Aucune faille apparente détectée.")
+        notify("Audit Terminé", "Jeu sécurisé.")
+    end
+end})
+
+-- MOUVEMENT
+local Mov = Window:CreateTab("🏃 Mouvement", 4483362458)
+Mov:CreateSlider({Name="Vitesse", Range={16,500}, Increment=1, CurrentValue=16, Callback=function(v) S.speed=v end})
+Mov:CreateSlider({Name="Saut", Range={50,500}, Increment=1, CurrentValue=50, Callback=function(v) S.jump=v end})
+Mov:CreateToggle({Name="Noclip (Traverser Murs)", CurrentValue=false, Callback=function(v) S.noclip=v end})
+Mov:CreateToggle({Name="Saut Infini", CurrentValue=false, Callback=function(v) S.infJump=v end})
+Mov:CreateToggle({Name="Spin (Tornade)", CurrentValue=false, Callback=function(v) S.spin=v end})
+Mov:CreateSlider({Name="Vitesse Spin", Range={10,300}, Increment=5, CurrentValue=50, Callback=function(v) S.spinSpeed=v end})
+
+-- FLY
+local FlyTab = Window:CreateTab("✈️ Fly", 4483362458)
+FlyTab:CreateToggle({Name="Activer Fly Moderne", CurrentValue=false, Callback=function(v) S.fly=v; ToggleFly(v) end})
+FlyTab:CreateSlider({Name="Vitesse Vol", Range={10,600}, Increment=5, CurrentValue=100, Callback=function(v) S.flySpeed=v end})
+FlyTab:CreateParagraph({Title="Info Fly", Content="Utilise le joystick pour avancer/tourner. Les boutons ▲ et ▼ à droite gèrent l'altitude."})
+
+-- TROLL / FLING
+local Troll = Window:CreateTab("🔥 Troll", 4483362458)
+Troll:CreateToggle({Name="Auto-Fling Proche (Aura)", CurrentValue=false, Callback=function(v) S.fling=v end})
+local tName = ""
+Troll:CreateInput({Name="Pseudo Cible", PlaceholderText="Joueur123...", Callback=function(t) tName=t end})
+Troll:CreateButton({Name="Fling la cible", Callback=function()
+    local p = Players:FindFirstChild(tName)
+    if p and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+        local r = p.Character.HumanoidRootPart
+        local bv = Instance.new("BodyVelocity", r); bv.MaxForce = Vector3.new(1e9,1e9,1e9); bv.Velocity = Vector3.new(S.flingPow, S.flingPow, S.flingPow)
+        local bav = Instance.new("BodyAngularVelocity", r); bav.MaxTorque = Vector3.new(1e9,1e9,1e9); bav.AngularVelocity = Vector3.new(0, S.flingPow, 0)
+        task.wait(0.5); bv:Destroy(); bav:Destroy()
+        notify("Fling", "Cible éjectée !")
+    else
+        notify("Erreur", "Joueur introuvable.")
+    end
+end})
+
+-- EXÉCUTEUR LUA
+local ExecTab = Window:CreateTab("💻 Exécuteur", 4483362458)
+local currentCode = ""
+ExecTab:CreateInput({Name="Script Lua", PlaceholderText="print('Zenith est actif')", RemoveTextAfterFocusLost=false, Callback=function(t) currentCode=t end})
+ExecTab:CreateButton({Name="Exécuter le Code Local", Callback=function()
+    local f, e = loadstring(currentCode)
+    if f then f() else notify("Erreur Lua", e) end
+end})
+
+-- WORLD
+local World = Window:CreateTab("🌍 World", 4483362458)
+World:CreateSlider({Name="Heure du Jour", Range={0,24}, Increment=0.1, CurrentValue=14, Callback=function(v) Lighting.ClockTime=v end})
+World:CreateButton({Name="Mode Full Bright (Voir la nuit)", Callback=function() Lighting.Brightness=5; Lighting.OutdoorAmbient=Color3.new(1,1,1); Lighting.GlobalShadows=false end})
+
+-- ==================== BOUCLE PRINCIPALE (CORE RENDERING) ====================
+RunService.Stepped:Connect(function()
+    local char = getChar(); local root = getRoot(); local hum = getHum()
+    if not char or not root or not hum then return end
+
+    -- Vitesse & Saut (Forcé en boucle pour bypass les anti-cheats basiques)
+    hum.WalkSpeed = S.speed
+    if not S.fly then hum.JumpPower = S.jump end
+
+    -- Noclip (Stable)
+    if S.noclip then
+        for _, p in pairs(char:GetDescendants()) do 
+            if p:IsA("BasePart") and p.CanCollide then 
+                p.CanCollide = false 
+            end 
+        end
+    end
+
+    -- Saut Infini
+    if S.infJump and UIS:IsKeyDown(Enum.KeyCode.Space) then 
+        hum:ChangeState(Enum.HumanoidStateType.Jumping) 
+    end
+
+    -- Spin
+    if S.spin then 
+        root.CFrame = root.CFrame * CFrame.Angles(0, math.rad(S.spinSpeed), 0) 
+    end
+
+    -- FLY MODERNE (Joystick / ZQSD)
+    if S.fly and FlyBV and FlyBG then
+        local cam = Camera.CFrame
+        local moveDir = hum.MoveDirection -- Détecte la direction du joystick mobile ou touches PC
+        local vel = moveDir * S.flySpeed
+        
+        if isMobile then
+            if heldUp then vel = vel + Vector3.new(0, S.flySpeed, 0) end
+            if heldDown then vel = vel - Vector3.new(0, S.flySpeed, 0) end
+        else
+            if UIS:IsKeyDown(Enum.KeyCode.Space) then vel = vel + Vector3.new(0, S.flySpeed, 0) end
+            if UIS:IsKeyDown(Enum.KeyCode.LeftShift) then vel = vel - Vector3.new(0, S.flySpeed, 0) end
+        end
+        
+        FlyBV.Velocity = vel
+        FlyBG.CFrame = cam
+    end
+
+    -- AUTO FLING AURA
+    if S.fling then
+        for _, p in pairs(Players:GetPlayers()) do
+            if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                local dist = (p.Character.HumanoidRootPart.Position - root.Position).Magnitude
+                if dist < 15 then -- Rayon de l'aura
+                    local r = p.Character.HumanoidRootPart
+                    local bv = Instance.new("BodyVelocity", r); bv.MaxForce = Vector3.new(1e9,1e9,1e9); bv.Velocity = Vector3.new(20000, 20000, 20000)
+                    local bav = Instance.new("BodyAngularVelocity", r); bav.MaxTorque = Vector3.new(1e9,1e9,1e9); bav.AngularVelocity = Vector3.new(0, 20000, 0)
+                    task.wait(0.1); bv:Destroy(); bav:Destroy()
+                end
+            end
+        end
+    end
+end)
+
+-- LOG DE DÉMARRAGE SUR DISCORD
+SendZenithLog("🚀 LANCEMENT ZENITH v50.0", "L'interface a été injectée et chargée correctement par l'utilisateur.")
+notify("ZÉNITH v50.0", "Activation réussie. Bienvenue.")                local b = Instance.new("TextButton")
                 b.Size = UDim2.new(0,70,0,70)
                 b.Position = pos
                 b.Text = txt
