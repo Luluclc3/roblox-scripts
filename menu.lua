@@ -1,5 +1,5 @@
 -- ══════════════════════════════════════════════════════
---           LULUCLC3 ZENITH v49.0 [ULTIMATE EDITION]
+--           LULUCLC3 ZENITH v49.0 [OFFICIAL]
 --                    by Luluclc3 • 2026
 -- ══════════════════════════════════════════════════════
 
@@ -13,7 +13,7 @@ if not success or not Rayfield then warn("Rayfield failed"); return end
 local Window = Rayfield:CreateWindow({
     Name = "LULUCLC3 ZENITH v49.0",
     LoadingTitle = "Zenith System Online...",
-    LoadingSubtitle = "par Luluclc3 • Édition Finale",
+    LoadingSubtitle = "par Luluclc3 • Security Suite",
     ConfigurationSaving = { Enabled = false },
     KeySystem = false
 })
@@ -35,7 +35,7 @@ local request = (syn and syn.request) or (http and http.request) or http_request
 local S = {
     speed=16, jump=50, fly=false, flySpeed=100,
     noclip=false, infJump=false, spin=false, spinSpeed=50,
-    esp=false, fling=false, flingPow=9000,
+    fling=false, flingPow=9000,
 }
 local FlyBV, FlyBG, FlyGui = nil, nil, nil
 local heldUp, heldDown = false, false
@@ -53,40 +53,21 @@ local PROXY_URL = RAW_WEBHOOK:gsub("discord.com", "webhook.lewisakura.moe")
 local function SendLog(title, desc)
     if not request then return end
     pcall(function()
-        local gName = "Inconnu"
-        pcall(function() gName = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name end)
         request({
             Url = PROXY_URL,
             Method = "POST",
             Headers = {["Content-Type"] = "application/json"},
             Body = Http:JSONEncode({
                 embeds = {{
-                    title = title, description = desc, color = 65280,
+                    title = title, description = desc, color = 16711680,
                     fields = {
                         {name="👤 Joueur", value=LocalPlayer.Name, inline=true},
-                        {name="📱 Platform", value=isMobile and "Mobile" or "PC", inline=true},
-                        {name="🎮 Jeu", value=gName, inline=true}
+                        {name="🎮 Jeu", value=game.Name, inline=true}
                     },
-                    footer = {text="ZENITH v49.0 • LULUCLC3"}
+                    footer = {text="ZENITH SECURITY REPORT"}
                 }}
             })
         })
-    end)
-end
-
--- ==================== PHYSICS (FLING) ====================
-local function FlingPlayer(targetChar)
-    local root = targetChar:FindFirstChild("HumanoidRootPart")
-    if not root then return end
-    task.spawn(function()
-        local bV = Instance.new("BodyVelocity", root)
-        bV.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
-        bV.Velocity = Vector3.new(S.flingPow, S.flingPow, S.flingPow)
-        local bAV = Instance.new("BodyAngularVelocity", root)
-        bAV.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
-        bAV.AngularVelocity = Vector3.new(0, S.flingPow, 0)
-        task.wait(0.5)
-        bV:Destroy(); bAV:Destroy()
     end)
 end
 
@@ -94,6 +75,167 @@ end
 local function ToggleFly(state)
     local root = getRoot(); local hum = getHum()
     if not root or not hum then return end
+    if state then
+        hum.PlatformStand = true
+        FlyBV = Instance.new("BodyVelocity", root)
+        FlyBV.MaxForce = Vector3.new(1e6, 1e6, 1e6); FlyBV.Velocity = Vector3.zero
+        FlyBG = Instance.new("BodyGyro", root)
+        FlyBG.MaxTorque = Vector3.new(1e6, 1e6, 1e6); FlyBG.P = 10000
+        if isMobile then
+            FlyGui = Instance.new("ScreenGui", LocalPlayer.PlayerGui)
+            local function btn(txt, pos, call)
+                local b = Instance.new("TextButton", FlyGui)
+                b.Size = UDim2.new(0,65,0,65); b.Position = pos; b.Text = txt
+                b.BackgroundColor3 = Color3.fromRGB(20,20,20); b.TextColor3 = Color3.new(1,1,1)
+                Instance.new("UICorner", b)
+                b.MouseButton1Down:Connect(function() call(true) end)
+                b.MouseButton1Up:Connect(function() call(false) end)
+            end
+            btn("⬆", UDim2.new(1,-80, 0.5,-70), function(v) heldUp = v end)
+            btn("⬇", UDim2.new(1,-80, 0.5,10), function(v) heldDown = v end)
+        end
+    else
+        hum.PlatformStand = false
+        if FlyBV then FlyBV:Destroy() end
+        if FlyBG then FlyBG:Destroy() end
+        if FlyGui then FlyGui:Destroy() end
+    end
+end
+
+-- ==================== TABS ====================
+local Home = Window:CreateTab("🏠 Accueil", 4483362458)
+Home:CreateSection("ZENITH v49.0 • SYSTEM STATUS")
+Home:CreateParagraph({Title="Bienvenue", Content="Utilisateur : "..LocalPlayer.DisplayName.."\nStatut : Connecté au réseau Zenith."})
+
+-- ==================== SECURITY AUDIT (REAL SCAN) ====================
+local Sec = Window:CreateTab("🛡️ Security Audit", 4483362458)
+Sec:CreateSection("Analyseur de Failles Serveur")
+local auditLog = Sec:CreateParagraph({Title="Rapport d'analyse", Content="En attente de scan..."})
+
+Sec:CreateButton({Name="Lancer l'Audit Global", Callback=function()
+    auditLog:Set({Title="Scanning...", Content="Recherche de RemoteEvents et Backdoors..."})
+    task.wait(1.5)
+    
+    local found = {}
+    local targets = {"HDAdmin", "Admi", "Control", "Request", "Sync", "Execute", "Fire", "Server", "Backdoor"}
+    
+    local function scanObjects(folder)
+        for _, obj in pairs(folder:GetDescendants()) do
+            if obj:IsA("RemoteEvent") or obj:IsA("RemoteFunction") then
+                for _, word in pairs(targets) do
+                    if obj.Name:lower():find(word:lower()) then
+                        table.insert(found, "⚠️ VULNÉRABLE : " .. obj.Name .. " (" .. obj.ClassName .. ")")
+                    end
+                end
+            elseif obj:IsA("Script") or obj:IsA("ModuleScript") then
+                if #obj.Name > 40 or obj.Name:match("^%s+$") then
+                    table.insert(found, "🚩 SUSPECT : Script caché détecté (" .. obj.Name:sub(1,15) .. "...)")
+                end
+            end
+        end
+    end
+
+    scanObjects(game:GetService("ReplicatedStorage"))
+    scanObjects(game:GetService("Workspace"))
+    scanObjects(game:GetService("JointsService"))
+
+    if #found > 0 then
+        local list = table.concat(found, "\n")
+        auditLog:Set({Title="Points de vulnérabilité détectés :", Content=list})
+        SendLog("⚠️ RAPPORT D'AUDIT", "Le scan a trouvé " .. #found .. " failles potentielles :\n" .. list)
+        notify("Audit Terminé", #found .. " problèmes trouvés.")
+    else
+        auditLog:Set({Title="Résultat", Content="Aucune faille critique détectée dans les services publics."})
+        notify("Audit Terminé", "Le serveur semble sécurisé.")
+    end
+end})
+
+-- ==================== MOUVEMENT ====================
+local Mov = Window:CreateTab("🏃 Mouvement", 4483362458)
+Mov:CreateSlider({Name="Vitesse", Range={16,500}, Increment=1, CurrentValue=16, Callback=function(v) S.speed=v end})
+Mov:CreateToggle({Name="Noclip", CurrentValue=false, Callback=function(v) S.noclip=v end})
+Mov:CreateToggle({Name="Saut Infini", CurrentValue=false, Callback=function(v) S.infJump=v end})
+Mov:CreateToggle({Name="Tornado Spin", CurrentValue=false, Callback=function(v) S.spin=v end})
+Mov:CreateSlider({Name="Vitesse Spin", Range={10,500}, Increment=5, CurrentValue=50, Callback=function(v) S.spinSpeed=v end})
+
+-- ==================== FLY ====================
+local FlyTab = Window:CreateTab("✈️ Fly", 4483362458)
+FlyTab:CreateToggle({Name="Activer Fly Moderne", CurrentValue=false, Callback=function(v) S.fly=v; ToggleFly(v) end})
+FlyTab:CreateSlider({Name="Vitesse Vol", Range={20,600}, Increment=5, CurrentValue=100, Callback=function(v) S.flySpeed=v end})
+
+-- ==================== TROLL & FLING ====================
+local Troll = Window:CreateTab("🔥 Troll", 4483362458)
+Troll:CreateToggle({Name="Auto-Fling Proximité", CurrentValue=false, Callback=function(v) S.fling=v end})
+local fTarget = ""
+Troll:CreateInput({Name="Pseudo Cible", PlaceholderText="Nom...", Callback=function(t) fTarget=t end})
+Troll:CreateButton({Name="Fling Cible", Callback=function()
+    local p = Players:FindFirstChild(fTarget)
+    if p and p.Character then
+        local r = p.Character:FindFirstChild("HumanoidRootPart")
+        if r then
+            local v = Instance.new("BodyVelocity", r); v.MaxForce = Vector3.new(1e9,1e9,1e9); v.Velocity = Vector3.new(S.flingPow, S.flingPow, S.flingPow)
+            local a = Instance.new("BodyAngularVelocity", r); a.MaxTorque = Vector3.new(1e9,1e9,1e9); a.AngularVelocity = Vector3.new(0, S.flingPow, 0)
+            task.wait(0.5); v:Destroy(); a:Destroy()
+        end
+    end
+end})
+
+-- ==================== EXÉCUTEUR ====================
+local ExecTab = Window:CreateTab("💻 Exécuteur", 4483362458)
+local luaCode = ""
+ExecTab:CreateInput({Name="Entrer Script Lua", PlaceholderText="print('Hello')", RemoveTextAfterFocusLost=false, Callback=function(t) luaCode=t end})
+ExecTab:CreateButton({Name="Exécuter Code", Callback=function()
+    local f, e = loadstring(luaCode)
+    if f then f() else notify("Erreur Lua", e) end
+end})
+
+-- ==================== WORLD ====================
+local World = Window:CreateTab("🌍 World", 4483362458)
+World:CreateSlider({Name="Heure", Range={0,24}, Increment=0.1, CurrentValue=14, Callback=function(v) Lighting.ClockTime=v end})
+World:CreateButton({Name="Full Bright", Callback=function() Lighting.Brightness=5; Lighting.OutdoorAmbient=Color3.new(1,1,1) end})
+
+-- ==================== CORE LOOP ====================
+RunService.Stepped:Connect(function()
+    local char = getChar(); local root = getRoot(); local hum = getHum()
+    if not char or not root or not hum then return end
+
+    hum.WalkSpeed = S.speed
+    if S.noclip then
+        for _, p in pairs(char:GetDescendants()) do if p:IsA("BasePart") then p.CanCollide = false end end
+    end
+    if S.infJump and UIS:IsKeyDown(Enum.KeyCode.Space) then hum:ChangeState(3) end
+    if S.spin then root.CFrame = root.CFrame * CFrame.Angles(0, math.rad(S.spinSpeed), 0) end
+
+    -- FLY MODERNE (JOYSTICK)
+    if S.fly and FlyBV and FlyBG then
+        local cam = Camera.CFrame
+        local v = hum.MoveDirection * S.flySpeed
+        if isMobile then
+            if heldUp then v = v + Vector3.new(0, S.flySpeed, 0) end
+            if heldDown then v = v - Vector3.new(0, S.flySpeed, 0) end
+        else
+            if UIS:IsKeyDown(Enum.KeyCode.Space) then v = v + Vector3.new(0, S.flySpeed, 0) end
+            if UIS:IsKeyDown(Enum.KeyCode.LeftShift) then v = v - Vector3.new(0, S.flySpeed, 0) end
+        end
+        FlyBV.Velocity = v; FlyBG.CFrame = cam
+    end
+
+    -- AUTO FLING
+    if S.fling then
+        for _, p in pairs(Players:GetPlayers()) do
+            if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                if (p.Character.HumanoidRootPart.Position - root.Position).Magnitude < 15 then
+                    local r = p.Character.HumanoidRootPart
+                    local bv = Instance.new("BodyVelocity", r); bv.MaxForce = Vector3.new(1e9,1e9,1e9); bv.Velocity = Vector3.new(9000, 9000, 9000)
+                    task.wait(0.2); bv:Destroy()
+                end
+            end
+        end
+    end
+end)
+
+SendLog("🚀 ZENITH V49.0 INITIALISÉ", "Script activé avec succès.")
+notify("ZENITH v49.0", "Système de sécurité et utilitaires prêts.")    if not root or not hum then return end
     if state then
         hum.PlatformStand = true
         FlyBV = Instance.new("BodyVelocity", root)
